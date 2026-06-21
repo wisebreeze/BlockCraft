@@ -192,6 +192,30 @@ export class Player {
     return false
   }
 
+  // Check if player has ground support at given position (for sneak edge detection)
+  hasGroundSupport(x, z) {
+    const hw = this.width / 2
+    const feetY = Math.floor(this.position.y - 0.01) // Just below player feet
+
+    // Check all four corners of player's base
+    const corners = [
+      { x: x - hw + 0.01, z: z - hw + 0.01 },
+      { x: x + hw - 0.01, z: z - hw + 0.01 },
+      { x: x - hw + 0.01, z: z + hw - 0.01 },
+      { x: x + hw - 0.01, z: z + hw - 0.01 }
+    ]
+
+    for (const corner of corners) {
+      const bx = Math.floor(corner.x)
+      const bz = Math.floor(corner.z)
+      if (this.world.isSolid(bx, feetY, bz)) {
+        return true
+      }
+    }
+
+    return false
+  }
+
   update(deltaTime) {
     if (this.flying) {
       this.updateFlying(deltaTime)
@@ -262,7 +286,14 @@ export class Player {
     // Move X
     const newX = this.position.x + moveX
     if (!this.checkCollision(newX, this.position.y, this.position.z)) {
-      this.position.x = newX
+      // Sneak edge protection: don't walk off edges when sneaking and on ground
+      if (this.keys.sneak && this.onGround) {
+        if (this.hasGroundSupport(newX, this.position.z)) {
+          this.position.x = newX
+        }
+      } else {
+        this.position.x = newX
+      }
     } else {
       this.velocity.x = 0
     }
@@ -270,7 +301,14 @@ export class Player {
     // Move Z
     const newZ = this.position.z + moveZ
     if (!this.checkCollision(this.position.x, this.position.y, newZ)) {
-      this.position.z = newZ
+      // Sneak edge protection: don't walk off edges when sneaking and on ground
+      if (this.keys.sneak && this.onGround) {
+        if (this.hasGroundSupport(this.position.x, newZ)) {
+          this.position.z = newZ
+        }
+      } else {
+        this.position.z = newZ
+      }
     } else {
       this.velocity.z = 0
     }

@@ -254,98 +254,83 @@ export class Game {
       joystickKnob.style.transform = 'translate(-50%, -50%)'
     })
 
-    // Action buttons
-    const btnJump = document.getElementById('btn-jump')
-    const btnSneak = document.getElementById('btn-sneak')
-    const btnFlyUp = document.getElementById('btn-fly-up')
-    const btnFlyDown = document.getElementById('btn-fly-down')
+    // Action buttons (merged: jump/fly-up and sneak/fly-down)
+    const btnActionUp = document.getElementById('btn-action-up')
+    const btnActionDown = document.getElementById('btn-action-down')
+    let lastUpTapTime = 0
 
-    btnJump.addEventListener('touchstart', (e) => {
-      e.preventDefault()
-      e.stopPropagation()
-      btnJump.classList.add('pressed')
-      this.player.keys.jump = true
-    })
-    btnJump.addEventListener('touchend', (e) => {
-      e.preventDefault()
-      e.stopPropagation()
-      btnJump.classList.remove('pressed')
-      this.player.keys.jump = false
-    })
-    btnJump.addEventListener('touchcancel', (e) => {
-      e.preventDefault()
-      e.stopPropagation()
-      btnJump.classList.remove('pressed')
-      this.player.keys.jump = false
-    })
+    // Update button styles based on flight mode
+    const updateActionButtons = () => {
+      if (this.player.flying) {
+        btnActionUp.classList.remove('btn-jump')
+        btnActionUp.classList.add('btn-fly-up')
+        btnActionDown.classList.remove('btn-sneak')
+        btnActionDown.classList.add('btn-fly-down')
+      } else {
+        btnActionUp.classList.remove('btn-fly-up')
+        btnActionUp.classList.add('btn-jump')
+        btnActionDown.classList.remove('btn-fly-down')
+        btnActionDown.classList.add('btn-sneak')
+      }
+    }
 
-    btnSneak.addEventListener('touchstart', (e) => {
+    // Up button (jump / fly-up)
+    btnActionUp.addEventListener('touchstart', (e) => {
       e.preventDefault()
       e.stopPropagation()
-      btnSneak.classList.add('pressed')
-      this.player.keys.sneak = true
-    })
-    btnSneak.addEventListener('touchend', (e) => {
-      e.preventDefault()
-      e.stopPropagation()
-      btnSneak.classList.remove('pressed')
-      this.player.keys.sneak = false
-    })
-    btnSneak.addEventListener('touchcancel', (e) => {
-      e.preventDefault()
-      e.stopPropagation()
-      btnSneak.classList.remove('pressed')
-      this.player.keys.sneak = false
-    })
+      btnActionUp.classList.add('pressed')
 
-    btnFlyUp.addEventListener('touchstart', (e) => {
-      e.preventDefault()
-      e.stopPropagation()
-      btnFlyUp.classList.add('pressed')
       const now = Date.now()
-      // Double tap to toggle flight
-      if (now - this.lastFlyUpTapTime < 300) {
+      // Double tap to toggle flight mode
+      if (now - lastUpTapTime < 300) {
         this.player.flying = !this.player.flying
+        updateActionButtons()
         if (!this.player.flying) {
           this.player.keys.jump = false
         }
-        this.lastFlyUpTapTime = 0
+        lastUpTapTime = 0
       } else {
-        this.player.flying = true
-        this.player.keys.jump = true
-        this.lastFlyUpTapTime = now
+        if (this.player.flying) {
+          this.player.keys.jump = true
+        } else {
+          this.player.keys.jump = true
+        }
+        lastUpTapTime = now
       }
     })
-    btnFlyUp.addEventListener('touchend', (e) => {
+    btnActionUp.addEventListener('touchend', (e) => {
       e.preventDefault()
       e.stopPropagation()
-      btnFlyUp.classList.remove('pressed')
+      btnActionUp.classList.remove('pressed')
       this.player.keys.jump = false
     })
-    btnFlyUp.addEventListener('touchcancel', (e) => {
+    btnActionUp.addEventListener('touchcancel', (e) => {
       e.preventDefault()
       e.stopPropagation()
-      btnFlyUp.classList.remove('pressed')
+      btnActionUp.classList.remove('pressed')
       this.player.keys.jump = false
     })
 
-    btnFlyDown.addEventListener('touchstart', (e) => {
+    // Down button (sneak / fly-down)
+    btnActionDown.addEventListener('touchstart', (e) => {
       e.preventDefault()
       e.stopPropagation()
-      btnFlyDown.classList.add('pressed')
-      this.player.flying = true
+      btnActionDown.classList.add('pressed')
       this.player.keys.sneak = true
+      if (this.player.flying) {
+        // Already handled by sneak key in flight mode
+      }
     })
-    btnFlyDown.addEventListener('touchend', (e) => {
+    btnActionDown.addEventListener('touchend', (e) => {
       e.preventDefault()
       e.stopPropagation()
-      btnFlyDown.classList.remove('pressed')
+      btnActionDown.classList.remove('pressed')
       this.player.keys.sneak = false
     })
-    btnFlyDown.addEventListener('touchcancel', (e) => {
+    btnActionDown.addEventListener('touchcancel', (e) => {
       e.preventDefault()
       e.stopPropagation()
-      btnFlyDown.classList.remove('pressed')
+      btnActionDown.classList.remove('pressed')
       this.player.keys.sneak = false
     })
 
