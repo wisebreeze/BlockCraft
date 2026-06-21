@@ -22,7 +22,7 @@ export class Game {
     // Scene
     this.scene = new THREE.Scene()
     this.scene.background = new THREE.Color(0x87CEEB)
-    this.scene.fog = new THREE.Fog(0x87CEEB, 12, 24)
+    this.scene.fog = new THREE.Fog(0x87CEEB, 16, 32)
 
     // Camera
     this.camera = new THREE.PerspectiveCamera(
@@ -54,16 +54,15 @@ export class Game {
     this.scene.add(directionalLight)
 
     // World
-    this.world = new World(this.scene, 48, 32)
-    this.world.generateTerrain()
+    this.world = new World(this.scene, 32)
 
     // Player
     this.player = new Player(this.camera, this.world)
     const spawnPos = this.world.getSpawnPosition()
     this.player.setPosition(spawnPos.x, spawnPos.y, spawnPos.z)
 
-    // Initial visibility culling
-    this.world.updateVisibility(spawnPos.x, spawnPos.y + this.player.eyeHeight, spawnPos.z)
+    // Load initial chunks around spawn
+    this.world.updateChunks(spawnPos.x, spawnPos.z)
 
     // Block highlight - use EdgesGeometry to avoid face diagonals
     const highlightBox = new THREE.BoxGeometry(1.01, 1.01, 1.01)
@@ -771,16 +770,11 @@ export class Game {
     this.player.update(deltaTime)
     this.updateBlockHighlight()
 
-    // Update visibility culling every 2 frames for performance
-    this._visibilityFrame = (this._visibilityFrame || 0) + 1
-    if (this._visibilityFrame >= 2) {
-      this._visibilityFrame = 0
-      this.world.updateVisibility(
-        this.player.position.x,
-        this.player.position.y + this.player.eyeHeight,
-        this.player.position.z
-      )
-    }
+    // Update chunks every frame for infinite world
+    this.world.updateChunks(
+      this.player.position.x,
+      this.player.position.z
+    )
 
     this.renderer.render(this.scene, this.camera)
   }
