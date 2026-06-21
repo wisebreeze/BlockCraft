@@ -314,8 +314,11 @@ export class Player {
           const stepY = this.position.y + step
           if (!this.checkCollision(newX, stepY, this.position.z)) {
             this.position.x = newX
-            this.position.y = stepY
-            this.velocity.y = 0
+            // Small initial lift to avoid getting stuck
+            this.position.y += 0.05
+            // Jump velocity for natural step climbing animation
+            this.velocity.y = 6.5
+            this.onGround = false
             break
           }
         }
@@ -343,8 +346,11 @@ export class Player {
           const stepY = this.position.y + step
           if (!this.checkCollision(this.position.x, stepY, newZ)) {
             this.position.z = newZ
-            this.position.y = stepY
-            this.velocity.y = 0
+            // Small initial lift to avoid getting stuck
+            this.position.y += 0.05
+            // Jump velocity for natural step climbing animation
+            this.velocity.y = 6.5
+            this.onGround = false
             break
           }
         }
