@@ -1,13 +1,17 @@
 import * as THREE from 'three'
+import { TGALoader } from 'three/addons/loaders/TGALoader.js'
 
 const textureLoader = new THREE.TextureLoader()
+const tgaLoader = new TGALoader()
 
 function loadTexture(path) {
-  const texture = textureLoader.load(path)
+  const loader = path.endsWith('.tga') ? tgaLoader : textureLoader
+  const texture = loader.load(path)
   texture.magFilter = THREE.NearestFilter
   texture.minFilter = THREE.NearestFilter
   texture.wrapS = THREE.RepeatWrapping
   texture.wrapT = THREE.RepeatWrapping
+  texture.colorSpace = THREE.SRGBColorSpace
   return texture
 }
 
@@ -147,7 +151,8 @@ export function getBlockMaterial(blockType, face) {
   const material = new THREE.MeshLambertMaterial({
     map: texture,
     transparent: data.transparent || false,
-    opacity: data.opacity || 1.0
+    opacity: data.opacity || 1.0,
+    side: THREE.FrontSide
   })
 
   return material
@@ -155,11 +160,11 @@ export function getBlockMaterial(blockType, face) {
 
 export function createBlockMaterials(blockType) {
   return [
-    getBlockMaterial(blockType, 'side'),   // right
-    getBlockMaterial(blockType, 'side'),   // left
-    getBlockMaterial(blockType, 'top'),    // top
-    getBlockMaterial(blockType, 'bottom'), // bottom
-    getBlockMaterial(blockType, 'side'),   // front
-    getBlockMaterial(blockType, 'side')    // back
+    getBlockMaterial(blockType, 'side'),   // right (+x)
+    getBlockMaterial(blockType, 'side'),   // left (-x)
+    getBlockMaterial(blockType, 'top'),    // top (+y)
+    getBlockMaterial(blockType, 'bottom'), // bottom (-y)
+    getBlockMaterial(blockType, 'side'),   // front (+z)
+    getBlockMaterial(blockType, 'side')    // back (-z)
   ]
 }

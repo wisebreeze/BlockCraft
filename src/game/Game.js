@@ -35,12 +35,16 @@ export class Game {
     })
     this.renderer.setSize(window.innerWidth, window.innerHeight)
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
+    this.renderer.outputColorSpace = THREE.SRGBColorSpace
 
     // Lighting
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.6)
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.8)
     this.scene.add(ambientLight)
 
-    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8)
+    const hemisphereLight = new THREE.HemisphereLight(0x87CEEB, 0x3d5c3d, 0.6)
+    this.scene.add(hemisphereLight)
+
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 1.0)
     directionalLight.position.set(50, 100, 50)
     directionalLight.castShadow = false
     this.scene.add(directionalLight)
