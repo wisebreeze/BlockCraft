@@ -181,7 +181,10 @@ export class World {
       for (let z = -halfSize; z < halfSize; z++) {
         const height = this.getHeight(x, z)
 
-        for (let y = 0; y < height; y++) {
+        // Bedrock layer at y=0
+        this.setBlock(x, 0, z, BlockTypes.BEDROCK)
+
+        for (let y = 1; y < height; y++) {
           let blockType
           if (y === height - 1) {
             blockType = BlockTypes.GRASS

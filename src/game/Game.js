@@ -1,7 +1,7 @@
 import * as THREE from 'three'
 import { World } from './World.js'
 import { Player } from './Player.js'
-import { HotbarBlocks, BlockTypes } from './BlockTypes.js'
+import { HotbarBlocks, BlockTypes, BlockData, getBlockDisplayColor, getBlockDisplayImageURL } from './BlockTypes.js'
 
 export class Game {
   constructor(canvas) {
@@ -9,6 +9,9 @@ export class Game {
     this.running = false
     this.selectedBlockIndex = 0
     this.lastFlyUpTapTime = 0
+
+    // Inventory system - 9 slots for hotbar
+    this.inventory = new Array(9).fill(null).map(() => ({ type: null, count: 0 }))
 
     this.init()
     this.setupInput()
@@ -155,6 +158,9 @@ export class Game {
         this.selectBlock(index)
       })
     })
+
+    // Initialize hotbar UI
+    this.updateHotbarUI()
 
     // Mobile controls
     this.setupMobileControls()
@@ -394,7 +400,103 @@ export class Game {
   }
 
   getSelectedBlockType() {
-    return HotbarBlocks[this.selectedBlockIndex]
+    const slot = this.inventory[this.selectedBlockIndex]
+    if (slot && slot.type !== null && slot.count > 0) {
+      return slot.type
+    }
+    return null
+  }
+
+  addToInventory(blockType) {
+    // First try to stack with existing slot of same type
+    for (let i = 0; i < this.inventory.length; i++) {
+      if (this.inventory[i].type === blockType) {
+        this.inventory[i].count++
+        this.updateHotbarUI()
+        return true
+      }
+    }
+
+    // Then try to find empty slot
+    for (let i = 0; i < this.inventory.length; i++) {
+      if (this.inventory[i].type === null || this.inventory[i].count === 0) {
+        this.inventory[i].type = blockType
+        this.inventory[i].count = 1
+        this.updateHotbarUI()
+        return true
+      }
+    }
+
+    // Inventory full
+    return false
+  }
+
+  removeFromInventory(slotIndex) {
+    if (slotIndex < 0 || slotIndex >= this.inventory.length) return false
+
+    const slot = this.inventory[slotIndex]
+    if (slot.type === null || slot.count <= 0) return false
+
+    slot.count--
+    if (slot.count <= 0) {
+      slot.type = null
+      slot.count = 0
+    }
+
+    this.updateHotbarUI()
+    return true
+  }
+
+  updateHotbarUI() {
+    const slots = document.querySelectorAll('.hotbar-slot')
+    slots.forEach((slot, index) => {
+      const item = this.inventory[index]
+      const img = slot.querySelector('img')
+      const countEl = slot.querySelector('.slot-count')
+
+      if (item.type !== null && item.count > 0) {
+        // Get block data
+        const displayColor = getBlockDisplayColor(item.type)
+
+        // Set background color as fallback
+        slot.style.backgroundColor = displayColor + '33'
+
+        // Use processed image URL (supports TGA and color tint)
+        getBlockDisplayImageURL(item.type).then(url => {
+          if (url) {
+            img.src = url
+            img.style.display = 'block'
+            slot.style.backgroundColor = ''
+          } else {
+            // Fallback to color block
+            img.style.display = 'none'
+            slot.style.backgroundColor = displayColor
+          }
+        })
+
+        // Show count if more than 1
+        if (item.count > 1) {
+          if (!countEl) {
+            const newCountEl = document.createElement('span')
+            newCountEl.className = 'slot-count'
+            newCountEl.textContent = item.count
+            slot.appendChild(newCountEl)
+          } else {
+            countEl.textContent = item.count
+            countEl.style.display = 'block'
+          }
+        } else if (countEl) {
+          countEl.style.display = 'none'
+        }
+      } else {
+        // Empty slot
+        img.style.display = 'none'
+        slot.style.backgroundColor = ''
+        if (countEl) {
+          countEl.style.display = 'none'
+        }
+      }
+    })
   }
 
   breakBlock() {
@@ -407,11 +509,26 @@ export class Game {
 
     const result = this.world.raycast(origin, direction, 6)
     if (result.hit) {
-      this.world.setBlock(result.x, result.y, result.z, BlockTypes.AIR)
+      const blockType = this.world.getBlock(result.x, result.y, result.z)
+      const blockData = BlockData[blockType]
+
+      // Check if block is unbreakable (bedrock)
+      if (blockData && blockData.unbreakable) {
+        return
+      }
+
+      if (blockType !== BlockTypes.AIR) {
+        this.world.setBlock(result.x, result.y, result.z, BlockTypes.AIR)
+        // Add to inventory
+        this.addToInventory(blockType)
+      }
     }
   }
 
   placeBlock() {
+    const selectedType = this.getSelectedBlockType()
+    if (selectedType === null) return
+
     const direction = this.player.getLookDirection()
     const origin = new THREE.Vector3(
       this.player.position.x,
@@ -426,7 +543,7 @@ export class Game {
       const placeZ = result.z + result.normal.z
 
       // Check if player is not in the way
-      const blockType = this.getSelectedBlockType()
+      const blockType = selectedType
 
       // Don't place if it would collide with player
       const playerMin = {
@@ -448,7 +565,10 @@ export class Game {
                        playerMin.z < blockMax.z && playerMax.z > blockMin.z
 
       if (!collides) {
-        this.world.setBlock(placeX, placeY, placeZ, blockType)
+        // Remove from inventory first
+        if (this.removeFromInventory(this.selectedBlockIndex)) {
+          this.world.setBlock(placeX, placeY, placeZ, blockType)
+        }
       }
     }
   }

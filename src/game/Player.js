@@ -63,7 +63,6 @@ export class Player {
       this.position.y + this.eyeHeight,
       this.position.z
     )
-
     this.camera.rotation.order = 'YXZ'
     this.camera.rotation.y = this.yaw
     this.camera.rotation.x = this.pitch
@@ -195,7 +194,6 @@ export class Player {
     } else {
       this.updateNormal(deltaTime)
     }
-
     this.updateCamera()
   }
 
@@ -207,29 +205,40 @@ export class Player {
     // Calculate movement direction
     const moveDir = new THREE.Vector3(0, 0, 0)
 
-    if (this.keys.forward || this.joystick.y < 0) {
-      moveDir.add(forward)
-    }
-    if (this.keys.backward || this.joystick.y > 0) {
-      moveDir.sub(forward)
-    }
-    if (this.keys.left || this.joystick.x < 0) {
-      moveDir.sub(right)
-    }
-    if (this.keys.right || this.joystick.x > 0) {
-      moveDir.add(right)
-    }
+    // Keyboard input (binary)
+    if (this.keys.forward) moveDir.add(forward)
+    if (this.keys.backward) moveDir.sub(forward)
+    if (this.keys.left) moveDir.sub(right)
+    if (this.keys.right) moveDir.add(right)
 
-    // Apply joystick magnitude
+    // Joystick input (analog) - uses actual joystick values for smooth direction control
+    const joystickDeadzone = 0.12
     if (this.joystick.active) {
-      const magnitude = Math.min(1, Math.sqrt(this.joystick.x ** 2 + this.joystick.y ** 2))
-      if (moveDir.length() > 0) {
-        moveDir.normalize().multiplyScalar(magnitude)
+      const jx = Math.abs(this.joystick.x) > joystickDeadzone ? this.joystick.x : 0
+      const jy = Math.abs(this.joystick.y) > joystickDeadzone ? this.joystick.y : 0
+
+      if (jx !== 0 || jy !== 0) {
+        // Joystick Y: negative = forward, positive = backward
+        // Joystick X: positive = right, negative = left
+        moveDir.addScaledVector(forward, -jy)
+        moveDir.addScaledVector(right, jx)
       }
     }
 
+    // Normalize direction if moving
     if (moveDir.length() > 0) {
       moveDir.normalize()
+    }
+
+    // Calculate speed multiplier
+    let speedMultiplier = 1.0
+    if (this.joystick.active) {
+      const magnitude = Math.min(1, Math.sqrt(this.joystick.x ** 2 + this.joystick.y ** 2))
+      if (magnitude > joystickDeadzone) {
+        speedMultiplier = (magnitude - joystickDeadzone) / (1 - joystickDeadzone)
+      } else {
+        speedMultiplier = 0
+      }
     }
 
     // Apply gravity
@@ -242,8 +251,8 @@ export class Player {
     }
 
     // Apply movement
-    const moveX = moveDir.x * speed * deltaTime
-    const moveZ = moveDir.z * speed * deltaTime
+    const moveX = moveDir.x * speed * speedMultiplier * deltaTime
+    const moveZ = moveDir.z * speed * speedMultiplier * deltaTime
     const moveY = this.velocity.y * deltaTime
 
     // Move X
@@ -289,29 +298,38 @@ export class Player {
 
     const moveDir = new THREE.Vector3(0, 0, 0)
 
-    if (this.keys.forward || this.joystick.y < 0) {
-      moveDir.add(forward)
-    }
-    if (this.keys.backward || this.joystick.y > 0) {
-      moveDir.sub(forward)
-    }
-    if (this.keys.left || this.joystick.x < 0) {
-      moveDir.sub(right)
-    }
-    if (this.keys.right || this.joystick.x > 0) {
-      moveDir.add(right)
-    }
+    // Keyboard input (binary)
+    if (this.keys.forward) moveDir.add(forward)
+    if (this.keys.backward) moveDir.sub(forward)
+    if (this.keys.left) moveDir.sub(right)
+    if (this.keys.right) moveDir.add(right)
 
-    // Apply joystick magnitude
+    // Joystick input (analog) - uses actual joystick values for smooth direction control
+    const joystickDeadzone = 0.12
     if (this.joystick.active) {
-      const magnitude = Math.min(1, Math.sqrt(this.joystick.x ** 2 + this.joystick.y ** 2))
-      if (moveDir.length() > 0) {
-        moveDir.normalize().multiplyScalar(magnitude)
+      const jx = Math.abs(this.joystick.x) > joystickDeadzone ? this.joystick.x : 0
+      const jy = Math.abs(this.joystick.y) > joystickDeadzone ? this.joystick.y : 0
+
+      if (jx !== 0 || jy !== 0) {
+        moveDir.addScaledVector(forward, -jy)
+        moveDir.addScaledVector(right, jx)
       }
     }
 
+    // Normalize horizontal direction
     if (moveDir.length() > 0) {
       moveDir.normalize()
+    }
+
+    // Calculate speed multiplier for joystick
+    let speedMultiplier = 1.0
+    if (this.joystick.active) {
+      const magnitude = Math.min(1, Math.sqrt(this.joystick.x ** 2 + this.joystick.y ** 2))
+      if (magnitude > joystickDeadzone) {
+        speedMultiplier = (magnitude - joystickDeadzone) / (1 - joystickDeadzone)
+      } else {
+        speedMultiplier = 0
+      }
     }
 
     // Vertical movement
@@ -323,8 +341,8 @@ export class Player {
     }
 
     // Apply movement with collision detection
-    const moveX = moveDir.x * speed * deltaTime
-    const moveZ = moveDir.z * speed * deltaTime
+    const moveX = moveDir.x * speed * speedMultiplier * deltaTime
+    const moveZ = moveDir.z * speed * speedMultiplier * deltaTime
     const moveY = moveDir.y * speed * deltaTime
 
     // Move X
