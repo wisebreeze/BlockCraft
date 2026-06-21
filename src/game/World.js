@@ -203,8 +203,15 @@ export class World {
 
     // Collect tree candidates first
     const treeCandidates = []
+    const spawnX = 0
+    const spawnZ = 0
+    const spawnClearRadius = 3 // Keep 7x7 area around spawn clear of trees
     for (let x = -halfSize; x < halfSize; x++) {
       for (let z = -halfSize; z < halfSize; z++) {
+        // Skip trees near spawn point
+        if (Math.abs(x - spawnX) <= spawnClearRadius && Math.abs(z - spawnZ) <= spawnClearRadius) {
+          continue
+        }
         const height = this.getHeight(x, z)
         if (this.noise2D(x * 0.08, z * 0.08) > 0.96 && height > 5) {
           treeCandidates.push({ x, z, height })
