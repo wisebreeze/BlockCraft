@@ -234,6 +234,20 @@ export function getBlockDisplayColor(blockType) {
   }
 }
 
+// Display texture paths for UI (hotbar, inventory)
+const BlockDisplayTextures = {
+  [BlockTypes.GRASS]: { path: '/assets/blocks/grass_top.png', color: 0x55aa55 },
+  [BlockTypes.DIRT]: { path: '/assets/blocks/dirt.png', color: 0xffffff },
+  [BlockTypes.STONE]: { path: '/assets/blocks/stone.png', color: 0xffffff },
+  [BlockTypes.WOOD]: { path: '/assets/blocks/log_oak_top.png', color: 0xffffff },
+  [BlockTypes.LEAVES]: { path: '/assets/blocks/leaves_oak_carried.tga', color: 0x33aa33 },
+  [BlockTypes.PLANKS]: { path: '/assets/blocks/planks_oak.png', color: 0xffffff },
+  [BlockTypes.WATER]: { path: '/assets/blocks/water_still.png', color: 0x3366cc },
+  [BlockTypes.SAND]: { path: '/assets/blocks/cauldron_water.png', color: 0xe8d48a },
+  [BlockTypes.COBBLESTONE]: { path: '/assets/blocks/water_placeholder.png', color: 0x888888 },
+  [BlockTypes.BEDROCK]: { path: '/assets/blocks/bedrock.png', color: 0xffffff }
+}
+
 // Cache for processed display images
 const displayImageCache = new Map()
 
@@ -244,23 +258,29 @@ export function getBlockDisplayImageURL(blockType) {
   }
   
   const promise = new Promise((resolve) => {
-    const data = BlockData[blockType]
-    if (!data || !data.textures) {
+    const displayInfo = BlockDisplayTextures[blockType]
+    if (!displayInfo) {
       resolve(null)
       return
     }
     
-    const texturePath = data.textures.top || data.textures.side
-    const colorHex = data.colors ? (data.colors.top || data.colors.side || 0xffffff) : 0xffffff
+    const texturePath = displayInfo.path
+    const colorHex = displayInfo.color
     
     // Parse color
     const r = (colorHex >> 16) & 0xff
     const g = (colorHex >> 8) & 0xff
     const b = colorHex & 0xff
     
+    // If no tint needed and not TGA, just return the path directly
+    if (colorHex === 0xffffff && !texturePath.endsWith('.tga')) {
+      resolve(texturePath)
+      return
+    }
+    
     if (texturePath.endsWith('.tga')) {
       // TGA texture - use TGALoader
-      const texture = tgaLoader.load(texturePath, () => {
+      tgaLoader.load(texturePath, (texture) => {
         const canvas = document.createElement('canvas')
         const ctx = canvas.getContext('2d')
         canvas.width = texture.image.width
@@ -279,6 +299,8 @@ export function getBlockDisplayImageURL(blockType) {
         
         ctx.putImageData(imageData, 0, 0)
         resolve(canvas.toDataURL())
+      }, undefined, () => {
+        resolve(null)
       })
     } else {
       // PNG texture - use Image
