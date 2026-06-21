@@ -165,22 +165,24 @@ export class Game {
     const joystickKnob = document.getElementById('joystick-knob')
     const joystickFrame = document.getElementById('joystick-frame')
 
-    let joystickActive = false
+    let joystickTouchId = null
     let joystickCenter = { x: 0, y: 0 }
     const joystickRadius = 50
 
-    function getTouchPos(e) {
-      const touch = e.touches[0]
-      const rect = joystickFrame.getBoundingClientRect()
-      return {
-        x: touch.clientX - rect.left - rect.width / 2,
-        y: touch.clientY - rect.top - rect.height / 2
+    function findTouchById(touchList, id) {
+      for (let i = 0; i < touchList.length; i++) {
+        if (touchList[i].identifier === id) return touchList[i]
       }
+      return null
     }
 
     joystickArea.addEventListener('touchstart', (e) => {
       e.preventDefault()
-      joystickActive = true
+      e.stopPropagation()
+      if (joystickTouchId !== null) return
+
+      const touch = e.changedTouches[0]
+      joystickTouchId = touch.identifier
       this.player.joystick.active = true
 
       const rect = joystickFrame.getBoundingClientRect()
@@ -192,9 +194,12 @@ export class Game {
 
     joystickArea.addEventListener('touchmove', (e) => {
       e.preventDefault()
-      if (!joystickActive) return
+      e.stopPropagation()
+      if (joystickTouchId === null) return
 
-      const touch = e.touches[0]
+      const touch = findTouchById(e.touches, joystickTouchId)
+      if (!touch) return
+
       let dx = touch.clientX - joystickCenter.x
       let dy = touch.clientY - joystickCenter.y
 
@@ -212,7 +217,23 @@ export class Game {
 
     joystickArea.addEventListener('touchend', (e) => {
       e.preventDefault()
-      joystickActive = false
+      e.stopPropagation()
+      for (let i = 0; i < e.changedTouches.length; i++) {
+        if (e.changedTouches[i].identifier === joystickTouchId) {
+          joystickTouchId = null
+          this.player.joystick.active = false
+          this.player.joystick.x = 0
+          this.player.joystick.y = 0
+          joystickKnob.style.transform = 'translate(-50%, -50%)'
+          break
+        }
+      }
+    })
+
+    joystickArea.addEventListener('touchcancel', (e) => {
+      e.preventDefault()
+      e.stopPropagation()
+      joystickTouchId = null
       this.player.joystick.active = false
       this.player.joystick.x = 0
       this.player.joystick.y = 0
@@ -278,23 +299,32 @@ export class Game {
     })
 
     // Touch look (right side of screen)
-    let touchLookActive = false
+    let lookTouchId = null
     let lastTouchPos = { x: 0, y: 0 }
 
     this.canvas.addEventListener('touchstart', (e) => {
-      // Only use right side of screen for look
-      const touch = e.touches[0]
-      if (touch.clientX > window.innerWidth * 0.5) {
-        touchLookActive = true
-        lastTouchPos = { x: touch.clientX, y: touch.clientY }
+      if (lookTouchId !== null) return
+
+      // Find a touch on the right side of screen that isn't already handled
+      for (let i = 0; i < e.changedTouches.length; i++) {
+        const touch = e.changedTouches[i]
+        // Only use right side of screen for look, and avoid left side joystick area
+        if (touch.clientX > window.innerWidth * 0.4) {
+          lookTouchId = touch.identifier
+          lastTouchPos = { x: touch.clientX, y: touch.clientY }
+          break
+        }
       }
     })
 
     this.canvas.addEventListener('touchmove', (e) => {
-      if (!touchLookActive) return
+      if (lookTouchId === null) return
+
+      const touch = findTouchById(e.touches, lookTouchId)
+      if (!touch) return
+
       e.preventDefault()
 
-      const touch = e.touches[0]
       const dx = touch.clientX - lastTouchPos.x
       const dy = touch.clientY - lastTouchPos.y
 
@@ -306,7 +336,16 @@ export class Game {
     })
 
     this.canvas.addEventListener('touchend', (e) => {
-      touchLookActive = false
+      for (let i = 0; i < e.changedTouches.length; i++) {
+        if (e.changedTouches[i].identifier === lookTouchId) {
+          lookTouchId = null
+          break
+        }
+      }
+    })
+
+    this.canvas.addEventListener('touchcancel', (e) => {
+      lookTouchId = null
     })
   }
 
