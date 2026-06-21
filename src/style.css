@@ -212,7 +212,8 @@ html, body {
   background-image: url('/assets/ui/jump.png');
 }
 
-.btn-jump:active {
+.btn-jump:active,
+.btn-jump.pressed {
   background-image: url('/assets/ui/jump_pressed.png');
 }
 
@@ -220,7 +221,8 @@ html, body {
   background-image: url('/assets/ui/sneak.png');
 }
 
-.btn-sneak:active {
+.btn-sneak:active,
+.btn-sneak.pressed {
   background-image: url('/assets/ui/sneak_pressed.png');
 }
 
@@ -228,7 +230,8 @@ html, body {
   background-image: url('/assets/ui/flyingascend.png');
 }
 
-.btn-fly-up:active {
+.btn-fly-up:active,
+.btn-fly-up.pressed {
   background-image: url('/assets/ui/flyingascend_pressed.png');
 }
 
@@ -236,7 +239,8 @@ html, body {
   background-image: url('/assets/ui/flyingdescend.png');
 }
 
-.btn-fly-down:active {
+.btn-fly-down:active,
+.btn-fly-down.pressed {
   background-image: url('/assets/ui/flyingdescend_pressed.png');
 }
 

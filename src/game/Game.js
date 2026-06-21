@@ -260,28 +260,45 @@ export class Game {
     btnJump.addEventListener('touchstart', (e) => {
       e.preventDefault()
       e.stopPropagation()
+      btnJump.classList.add('pressed')
       this.player.keys.jump = true
     })
     btnJump.addEventListener('touchend', (e) => {
       e.preventDefault()
       e.stopPropagation()
+      btnJump.classList.remove('pressed')
+      this.player.keys.jump = false
+    })
+    btnJump.addEventListener('touchcancel', (e) => {
+      e.preventDefault()
+      e.stopPropagation()
+      btnJump.classList.remove('pressed')
       this.player.keys.jump = false
     })
 
     btnSneak.addEventListener('touchstart', (e) => {
       e.preventDefault()
       e.stopPropagation()
+      btnSneak.classList.add('pressed')
       this.player.keys.sneak = true
     })
     btnSneak.addEventListener('touchend', (e) => {
       e.preventDefault()
       e.stopPropagation()
+      btnSneak.classList.remove('pressed')
+      this.player.keys.sneak = false
+    })
+    btnSneak.addEventListener('touchcancel', (e) => {
+      e.preventDefault()
+      e.stopPropagation()
+      btnSneak.classList.remove('pressed')
       this.player.keys.sneak = false
     })
 
     btnFlyUp.addEventListener('touchstart', (e) => {
       e.preventDefault()
       e.stopPropagation()
+      btnFlyUp.classList.add('pressed')
       const now = Date.now()
       // Double tap to toggle flight
       if (now - this.lastFlyUpTapTime < 300) {
@@ -299,18 +316,33 @@ export class Game {
     btnFlyUp.addEventListener('touchend', (e) => {
       e.preventDefault()
       e.stopPropagation()
+      btnFlyUp.classList.remove('pressed')
+      this.player.keys.jump = false
+    })
+    btnFlyUp.addEventListener('touchcancel', (e) => {
+      e.preventDefault()
+      e.stopPropagation()
+      btnFlyUp.classList.remove('pressed')
       this.player.keys.jump = false
     })
 
     btnFlyDown.addEventListener('touchstart', (e) => {
       e.preventDefault()
       e.stopPropagation()
+      btnFlyDown.classList.add('pressed')
       this.player.flying = true
       this.player.keys.sneak = true
     })
     btnFlyDown.addEventListener('touchend', (e) => {
       e.preventDefault()
       e.stopPropagation()
+      btnFlyDown.classList.remove('pressed')
+      this.player.keys.sneak = false
+    })
+    btnFlyDown.addEventListener('touchcancel', (e) => {
+      e.preventDefault()
+      e.stopPropagation()
+      btnFlyDown.classList.remove('pressed')
       this.player.keys.sneak = false
     })
 
