@@ -194,7 +194,7 @@ export class World {
         }
 
         // Add some trees
-        if (this.noise2D(x * 0.1, z * 0.1) > 0.85 && height > 5) {
+        if (this.noise2D(x * 0.08, z * 0.08) > 0.92 && height > 5) {
           this.generateTree(x, height, z)
         }
       }

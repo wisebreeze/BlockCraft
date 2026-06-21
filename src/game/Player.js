@@ -322,9 +322,34 @@ export class Player {
       moveDir.y = -1
     }
 
-    this.position.x += moveDir.x * speed * deltaTime
-    this.position.y += moveDir.y * speed * deltaTime
-    this.position.z += moveDir.z * speed * deltaTime
+    // Apply movement with collision detection
+    const moveX = moveDir.x * speed * deltaTime
+    const moveZ = moveDir.z * speed * deltaTime
+    const moveY = moveDir.y * speed * deltaTime
+
+    // Move X
+    const newX = this.position.x + moveX
+    if (!this.checkCollision(newX, this.position.y, this.position.z)) {
+      this.position.x = newX
+    }
+
+    // Move Z
+    const newZ = this.position.z + moveZ
+    if (!this.checkCollision(this.position.x, this.position.y, newZ)) {
+      this.position.z = newZ
+    }
+
+    // Move Y
+    const newY = this.position.y + moveY
+    if (!this.checkCollision(this.position.x, newY, this.position.z)) {
+      this.position.y = newY
+    }
+
+    // Check if fallen out of world
+    if (this.position.y < -10) {
+      const spawn = this.world.getSpawnPosition()
+      this.setPosition(spawn.x, spawn.y, spawn.z)
+    }
   }
 
   getLookDirection() {

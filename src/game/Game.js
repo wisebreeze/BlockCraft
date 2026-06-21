@@ -8,6 +8,7 @@ export class Game {
     this.canvas = canvas
     this.running = false
     this.selectedBlockIndex = 0
+    this.lastFlyUpTapTime = 0
 
     this.init()
     this.setupInput()
@@ -271,8 +272,19 @@ export class Game {
     btnFlyUp.addEventListener('touchstart', (e) => {
       e.preventDefault()
       e.stopPropagation()
-      this.player.flying = true
-      this.player.keys.jump = true
+      const now = Date.now()
+      // Double tap to toggle flight
+      if (now - this.lastFlyUpTapTime < 300) {
+        this.player.flying = !this.player.flying
+        if (!this.player.flying) {
+          this.player.keys.jump = false
+        }
+        this.lastFlyUpTapTime = 0
+      } else {
+        this.player.flying = true
+        this.player.keys.jump = true
+        this.lastFlyUpTapTime = now
+      }
     })
     btnFlyUp.addEventListener('touchend', (e) => {
       e.preventDefault()

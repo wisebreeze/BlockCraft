@@ -152,8 +152,6 @@ html, body {
   background-size: contain;
   background-repeat: no-repeat;
   background-position: center;
-  /* Red UI style */
-  filter: sepia(1) saturate(8) hue-rotate(-50deg) brightness(0.9);
 }
 
 #joystick-knob {
@@ -168,8 +166,6 @@ html, body {
   background-position: center;
   transform: translate(-50%, -50%);
   transition: transform 0.05s ease-out;
-  /* Red UI style */
-  filter: sepia(1) saturate(10) hue-rotate(-55deg) brightness(0.85);
 }
 
 /* Action Buttons */
@@ -186,25 +182,52 @@ html, body {
 .action-btn {
   width: 60px;
   height: 60px;
-  border: 2px solid rgba(255, 255, 255, 0.5);
-  border-radius: 50%;
-  background: rgba(0, 0, 0, 0.4);
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
   cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   padding: 0;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
 }
 
 .action-btn:active {
-  background: rgba(255, 255, 255, 0.3);
   transform: scale(0.95);
 }
 
-.action-btn img {
-  width: 36px;
-  height: 36px;
-  image-rendering: pixelated;
+.btn-jump {
+  background-image: url('/assets/ui/jump.png');
+}
+
+.btn-jump:active {
+  background-image: url('/assets/ui/jump_pressed.png');
+}
+
+.btn-sneak {
+  background-image: url('/assets/ui/sneak.png');
+}
+
+.btn-sneak:active {
+  background-image: url('/assets/ui/sneak_pressed.png');
+}
+
+.btn-fly-up {
+  background-image: url('/assets/ui/flyingascend.png');
+}
+
+.btn-fly-up:active {
+  background-image: url('/assets/ui/flyingascend_pressed.png');
+}
+
+.btn-fly-down {
+  background-image: url('/assets/ui/flyingdescend.png');
+}
+
+.btn-fly-down:active {
+  background-image: url('/assets/ui/flyingdescend_pressed.png');
 }
 
 /* Build Buttons */
