@@ -162,13 +162,17 @@ export class Player {
   checkCollision(x, y, z) {
     const hw = this.width / 2
 
-    for (let dx = -1; dx <= 1; dx++) {
-      for (let dy = 0; dy <= Math.ceil(this.height); dy++) {
-        for (let dz = -1; dz <= 1; dz++) {
-          const bx = Math.floor(x + dx * hw)
-          const by = Math.floor(y + dy)
-          const bz = Math.floor(z + dz * hw)
+    // Calculate block range to check
+    const minX = Math.floor(x - hw)
+    const maxX = Math.floor(x + hw)
+    const minY = Math.floor(y)
+    const maxY = Math.floor(y + this.height)
+    const minZ = Math.floor(z - hw)
+    const maxZ = Math.floor(z + hw)
 
+    for (let bx = minX; bx <= maxX; bx++) {
+      for (let by = minY; by <= maxY; by++) {
+        for (let bz = minZ; bz <= maxZ; bz++) {
           if (this.world.isSolid(bx, by, bz)) {
             // Check AABB overlap
             const blockMin = { x: bx, y: by, z: bz }
