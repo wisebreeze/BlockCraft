@@ -65,15 +65,15 @@ export class Game {
     // Initial visibility culling
     this.world.updateVisibility(spawnPos.x, spawnPos.y + this.player.eyeHeight, spawnPos.z)
 
-    // Block highlight
-    const highlightGeometry = new THREE.BoxGeometry(1.01, 1.01, 1.01)
-    const highlightMaterial = new THREE.MeshBasicMaterial({
+    // Block highlight - use EdgesGeometry to avoid face diagonals
+    const highlightBox = new THREE.BoxGeometry(1.01, 1.01, 1.01)
+    const highlightGeometry = new THREE.EdgesGeometry(highlightBox)
+    const highlightMaterial = new THREE.LineBasicMaterial({
       color: 0x000000,
-      wireframe: true,
       transparent: true,
       opacity: 0.5
     })
-    this.blockHighlight = new THREE.Mesh(highlightGeometry, highlightMaterial)
+    this.blockHighlight = new THREE.LineSegments(highlightGeometry, highlightMaterial)
     this.blockHighlight.visible = false
     this.scene.add(this.blockHighlight)
 
@@ -471,6 +471,79 @@ export class Game {
     return true
   }
 
+  // Generate 3D isometric preview of a block for hotbar display
+  getBlock3DPreviewURL(blockType) {
+    // Check cache
+    if (this._blockPreviewCache?.has(blockType)) {
+      return this._blockPreviewCache.get(blockType)
+    }
+
+    // Create cache if not exists
+    if (!this._blockPreviewCache) {
+      this._blockPreviewCache = new Map()
+    }
+
+    const promise = new Promise((resolve) => {
+      const materials = this.world.materials[blockType]
+      if (!materials) {
+        resolve(null)
+        return
+      }
+
+      // Create a small scene for preview
+      const scene = new THREE.Scene()
+
+      // Create orthographic camera for isometric view
+      const size = 1.2
+      const camera = new THREE.OrthographicCamera(-size, size, size, -size, 0.1, 100)
+      camera.position.set(2, 1.5, 2)
+      camera.lookAt(0, 0, 0)
+
+      // Create cube
+      const geometry = new THREE.BoxGeometry(1, 1, 1)
+      const cube = new THREE.Mesh(geometry, materials)
+      // Rotate slightly for better view
+      cube.rotation.y = Math.PI / 4
+      scene.add(cube)
+
+      // Add lighting
+      const ambientLight = new THREE.AmbientLight(0xffffff, 0.7)
+      scene.add(ambientLight)
+
+      const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8)
+      directionalLight.position.set(5, 10, 7)
+      scene.add(directionalLight)
+
+      const directionalLight2 = new THREE.DirectionalLight(0xffffff, 0.4)
+      directionalLight2.position.set(-5, 5, -5)
+      scene.add(directionalLight2)
+
+      // Create renderer with transparent background
+      const renderer = new THREE.WebGLRenderer({
+        alpha: true,
+        antialias: false
+      })
+      renderer.setSize(64, 64)
+      renderer.setPixelRatio(2) // Higher resolution for crispness
+      renderer.outputColorSpace = THREE.SRGBColorSpace
+
+      // Render
+      renderer.render(scene, camera)
+
+      // Get image URL
+      const url = renderer.domElement.toDataURL()
+
+      // Clean up
+      geometry.dispose()
+      renderer.dispose()
+
+      resolve(url)
+    })
+
+    this._blockPreviewCache.set(blockType, promise)
+    return promise
+  }
+
   updateHotbarUI() {
     const slots = document.querySelectorAll('.hotbar-slot')
     slots.forEach((slot, index) => {
@@ -485,16 +558,29 @@ export class Game {
         // Set background color as fallback
         slot.style.backgroundColor = displayColor + '33'
 
-        // Use processed image URL (supports TGA and color tint)
-        getBlockDisplayImageURL(item.type).then(url => {
+        // Use 3D isometric preview of the block
+        this.getBlock3DPreviewURL(item.type).then(url => {
           if (url) {
             img.src = url
             img.style.display = 'block'
+            img.style.width = '44px'
+            img.style.height = '44px'
             slot.style.backgroundColor = ''
           } else {
-            // Fallback to color block
-            img.style.display = 'none'
-            slot.style.backgroundColor = displayColor
+            // Fallback to 2D processed image
+            getBlockDisplayImageURL(item.type).then(url2 => {
+              if (url2) {
+                img.src = url2
+                img.style.display = 'block'
+                img.style.width = '36px'
+                img.style.height = '36px'
+                slot.style.backgroundColor = ''
+              } else {
+                // Fallback to color block
+                img.style.display = 'none'
+                slot.style.backgroundColor = displayColor
+              }
+            })
           }
         })
 

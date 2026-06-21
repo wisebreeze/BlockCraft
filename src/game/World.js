@@ -198,11 +198,38 @@ export class World {
           }
           this.setBlock(x, y, z, blockType)
         }
+      }
+    }
 
-        // Add some trees
+    // Collect tree candidates first
+    const treeCandidates = []
+    for (let x = -halfSize; x < halfSize; x++) {
+      for (let z = -halfSize; z < halfSize; z++) {
+        const height = this.getHeight(x, z)
         if (this.noise2D(x * 0.08, z * 0.08) > 0.96 && height > 5) {
-          this.generateTree(x, height, z)
+          treeCandidates.push({ x, z, height })
         }
+      }
+    }
+
+    // Generate trees with 3x3 spacing to avoid clustering
+    const treePositions = new Set()
+    for (const tree of treeCandidates) {
+      const { x, z, height } = tree
+      let tooClose = false
+      // Check 3x3 area for existing trees
+      for (let dx = -1; dx <= 1; dx++) {
+        for (let dz = -1; dz <= 1; dz++) {
+          if (treePositions.has(`${x + dx},${z + dz}`)) {
+            tooClose = true
+            break
+          }
+        }
+        if (tooClose) break
+      }
+      if (!tooClose) {
+        this.generateTree(x, height, z)
+        treePositions.add(`${x},${z}`)
       }
     }
 
