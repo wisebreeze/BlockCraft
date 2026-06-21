@@ -227,7 +227,7 @@ html, body {
 }
 
 .btn-sneak.sneak-active {
-  box-shadow: 0 0 12px 4px rgba(255, 255, 255, 0.6);
+  background-image: url('/assets/ui/sneak_pressed.png');
 }
 
 .btn-fly-up {
