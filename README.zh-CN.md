@@ -7,7 +7,7 @@
 
 一个基于 Three.js 和 Vite 构建的简化版 Minecraft 体素游戏。
 
-![License](https://img.shields.io/badge/license-MIT-green)
+![License](https://img.shields.io/badge/license-AGPL--3.0-blue)
 ![Version](https://img.shields.io/badge/version-0.1.0-blue)
 ![Three.js](https://img.shields.io/badge/Three.js-0.167.0-lightgrey)
 ![Vite](https://img.shields.io/badge/Vite-5.4.0-yellow)
@@ -166,6 +166,6 @@ BlockCraft/
 
 ## 📄 许可证
 
-本项目仅用于教育目的。所有游戏贴图均归其各自所有者所有。
+本项目采用 **GNU Affero General Public License v3.0 (AGPL-3.0)** 许可证 - 详见 [LICENSE](LICENSE) 文件。
 
-本项目中的代码按原样提供，仅供学习使用。
+> **重要说明**：本项目中使用的所有游戏贴图和资源均为 Mojang Studios 和 Microsoft 的财产，**不**受 AGPL-3.0 许可证保护。本项目仅用于教育目的。

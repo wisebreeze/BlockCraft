@@ -7,7 +7,7 @@
 
 A simplified Minecraft-like voxel game built with Three.js and Vite.
 
-![License](https://img.shields.io/badge/license-MIT-green)
+![License](https://img.shields.io/badge/license-AGPL--3.0-blue)
 ![Version](https://img.shields.io/badge/version-0.1.0-blue)
 ![Three.js](https://img.shields.io/badge/Three.js-0.167.0-lightgrey)
 ![Vite](https://img.shields.io/badge/Vite-5.4.0-yellow)
@@ -166,6 +166,6 @@ All textures and assets used in this project are the property of Mojang Studios 
 
 ## 📄 License
 
-This project is for educational purposes only. All game textures are property of their respective owners.
+This project is licensed under the **GNU Affero General Public License v3.0 (AGPL-3.0)** - see the [LICENSE](LICENSE) file for details.
 
-The code in this project is provided as-is for learning purposes.
+> **Important Note**: All game textures and assets used in this project are the property of Mojang Studios and Microsoft, and are **not** covered by the AGPL-3.0 license. This project is for educational purposes only.
