@@ -46,7 +46,8 @@ export class Player {
     this.joystick = {
       active: false,
       x: 0,
-      y: 0
+      y: 0,
+      sprint: false
     }
 
     // Flying mode
@@ -237,7 +238,8 @@ export class Player {
   }
 
   updateNormal(deltaTime) {
-    const speed = this.keys.sprint ? this.sprintSpeed : this.speed
+    const isSprinting = this.keys.sprint || this.joystick.sprint
+    const speed = isSprinting ? this.sprintSpeed : this.speed
     const forward = this.getForwardVector()
     const right = this.getRightVector()
 
@@ -272,9 +274,11 @@ export class Player {
     // Calculate speed multiplier
     let speedMultiplier = 1.0
     if (this.joystick.active) {
-      const magnitude = Math.min(1, Math.sqrt(this.joystick.x ** 2 + this.joystick.y ** 2))
-      if (magnitude > joystickDeadzone) {
-        speedMultiplier = (magnitude - joystickDeadzone) / (1 - joystickDeadzone)
+      const magnitude = Math.sqrt(this.joystick.x ** 2 + this.joystick.y ** 2)
+      // Clamp to 0-1 range for speed calculation
+      const clampedMagnitude = Math.min(1, magnitude)
+      if (clampedMagnitude > joystickDeadzone) {
+        speedMultiplier = (clampedMagnitude - joystickDeadzone) / (1 - joystickDeadzone)
       } else {
         speedMultiplier = 0
       }
@@ -411,9 +415,11 @@ export class Player {
     // Calculate speed multiplier for joystick
     let speedMultiplier = 1.0
     if (this.joystick.active) {
-      const magnitude = Math.min(1, Math.sqrt(this.joystick.x ** 2 + this.joystick.y ** 2))
-      if (magnitude > joystickDeadzone) {
-        speedMultiplier = (magnitude - joystickDeadzone) / (1 - joystickDeadzone)
+      const magnitude = Math.sqrt(this.joystick.x ** 2 + this.joystick.y ** 2)
+      // Clamp to 0-1 range for speed calculation
+      const clampedMagnitude = Math.min(1, magnitude)
+      if (clampedMagnitude > joystickDeadzone) {
+        speedMultiplier = (clampedMagnitude - joystickDeadzone) / (1 - joystickDeadzone)
       } else {
         speedMultiplier = 0
       }

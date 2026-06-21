@@ -13,7 +13,7 @@ export class World {
     // Chunk loading queues for staggered loading (prevents frame drops)
     this._loadQueue = [] // Chunks waiting to be generated
     this._buildQueue = [] // Chunks waiting to have meshes built
-    this._chunksPerFrame = 1 // Number of chunks to process per frame
+    this._chunksPerFrame = 2 // Number of chunks to process per frame
 
     this.geometry = new THREE.BoxGeometry(1, 1, 1)
 
@@ -180,32 +180,34 @@ export class World {
 
   // Process chunk loading queues
   _processChunkQueues() {
-    let processed = 0
+    let buildsProcessed = 0
+    let loadsProcessed = 0
+    const maxPerFrame = this._chunksPerFrame
 
     // First process build queue (faster, just mesh building)
-    while (processed < this._chunksPerFrame && this._buildQueue.length > 0) {
+    while (buildsProcessed < maxPerFrame && this._buildQueue.length > 0) {
       const item = this._buildQueue.shift()
       const chunk = this.getChunk(item.cx, item.cz)
       if (chunk && !chunk.built) {
         chunk.buildMeshes()
-        processed++
+        buildsProcessed++
       }
     }
 
     // Then process load queue (slower, terrain generation)
-    while (processed < this._chunksPerFrame && this._loadQueue.length > 0) {
+    while (loadsProcessed < maxPerFrame && this._loadQueue.length > 0) {
       const item = this._loadQueue.shift()
       this._doLoadChunk(item.cx, item.cz)
-      processed++
+      loadsProcessed++
     }
 
     // Also rebuild any dirty chunks (from block edits)
-    if (processed < this._chunksPerFrame) {
+    if (buildsProcessed < maxPerFrame) {
       for (const [key, chunk] of this.chunks) {
         if (!chunk.built && !this._isInQueue(chunk.chunkX, chunk.chunkZ)) {
           chunk.buildMeshes()
-          processed++
-          if (processed >= this._chunksPerFrame) break
+          buildsProcessed++
+          if (buildsProcessed >= maxPerFrame) break
         }
       }
     }

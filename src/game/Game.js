@@ -180,7 +180,9 @@ export class Game {
 
     let joystickTouchId = null
     let joystickCenter = { x: 0, y: 0 }
-    const joystickRadius = 50
+    const joystickRadius = 50 // Normal movement radius (size of the frame)
+    const joystickMaxRadius = 75 // Max drag distance (allows dragging outside the frame)
+    const sprintThreshold = 1.0 // Normalized value where sprint starts (1.0 = at frame edge)
 
     function findTouchById(touchList, id) {
       for (let i = 0; i < touchList.length; i++) {
@@ -217,15 +219,23 @@ export class Game {
       let dy = touch.clientY - joystickCenter.y
 
       const dist = Math.sqrt(dx * dx + dy * dy)
-      if (dist > joystickRadius) {
-        dx = (dx / dist) * joystickRadius
-        dy = (dy / dist) * joystickRadius
+      
+      // Clamp to max radius (allows dragging outside the frame for sprint)
+      if (dist > joystickMaxRadius) {
+        dx = (dx / dist) * joystickMaxRadius
+        dy = (dy / dist) * joystickMaxRadius
       }
 
       joystickKnob.style.transform = `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px))`
 
-      this.player.joystick.x = dx / joystickRadius
-      this.player.joystick.y = dy / joystickRadius
+      // Normalize based on normal radius (values > 1.0 mean sprint zone)
+      const normalizedX = dx / joystickRadius
+      const normalizedY = dy / joystickRadius
+      const normalizedDist = Math.sqrt(normalizedX * normalizedX + normalizedY * normalizedY)
+
+      this.player.joystick.x = normalizedX
+      this.player.joystick.y = normalizedY
+      this.player.joystick.sprint = normalizedDist >= sprintThreshold
     })
 
     joystickArea.addEventListener('touchend', (e) => {
@@ -237,6 +247,7 @@ export class Game {
           this.player.joystick.active = false
           this.player.joystick.x = 0
           this.player.joystick.y = 0
+          this.player.joystick.sprint = false
           joystickKnob.style.transform = 'translate(-50%, -50%)'
           break
         }
@@ -250,6 +261,7 @@ export class Game {
       this.player.joystick.active = false
       this.player.joystick.x = 0
       this.player.joystick.y = 0
+      this.player.joystick.sprint = false
       joystickKnob.style.transform = 'translate(-50%, -50%)'
     })
 
