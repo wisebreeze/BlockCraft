@@ -266,11 +266,20 @@ export class Game {
         btnActionUp.classList.add('btn-fly-up')
         btnActionDown.classList.remove('btn-sneak')
         btnActionDown.classList.add('btn-fly-down')
+        // Reset sneak toggle when entering flight mode
+        this.player.sneakToggled = false
+        btnActionDown.classList.remove('sneak-active')
       } else {
         btnActionUp.classList.remove('btn-fly-up')
         btnActionUp.classList.add('btn-jump')
         btnActionDown.classList.remove('btn-fly-down')
         btnActionDown.classList.add('btn-sneak')
+        // Update sneak active state
+        if (this.player.sneakToggled) {
+          btnActionDown.classList.add('sneak-active')
+        } else {
+          btnActionDown.classList.remove('sneak-active')
+        }
       }
     }
 
@@ -311,27 +320,44 @@ export class Game {
       this.player.keys.jump = false
     })
 
-    // Down button (sneak / fly-down)
+    // Down button (sneak toggle in normal mode / fly-down hold in flight mode)
     btnActionDown.addEventListener('touchstart', (e) => {
       e.preventDefault()
       e.stopPropagation()
       btnActionDown.classList.add('pressed')
-      this.player.keys.sneak = true
+
       if (this.player.flying) {
-        // Already handled by sneak key in flight mode
+        // Flight mode: hold to descend
+        this.player.keys.sneak = true
+      } else {
+        // Normal mode: toggle sneak on press
+        this.player.sneakToggled = !this.player.sneakToggled
+        if (this.player.sneakToggled) {
+          btnActionDown.classList.add('sneak-active')
+        } else {
+          btnActionDown.classList.remove('sneak-active')
+        }
       }
     })
     btnActionDown.addEventListener('touchend', (e) => {
       e.preventDefault()
       e.stopPropagation()
       btnActionDown.classList.remove('pressed')
-      this.player.keys.sneak = false
+
+      if (this.player.flying) {
+        // Flight mode: release to stop descending
+        this.player.keys.sneak = false
+      }
+      // Normal mode: toggle already handled on touchstart
     })
     btnActionDown.addEventListener('touchcancel', (e) => {
       e.preventDefault()
       e.stopPropagation()
       btnActionDown.classList.remove('pressed')
-      this.player.keys.sneak = false
+
+      if (this.player.flying) {
+        this.player.keys.sneak = false
+      }
     })
 
     // Touch look (right side of screen) with tap to place and long press to break

@@ -25,6 +25,11 @@ export class Player {
     this.width = 0.6
     this.height = 1.8
     this.eyeHeight = 1.62
+    this.baseEyeHeight = 1.62
+    this.sneakEyeHeight = 1.45 // Lower eye height when sneaking
+
+    // Sneak toggle (for mobile)
+    this.sneakToggled = false
 
     // Input state
     this.keys = {
@@ -217,6 +222,12 @@ export class Player {
   }
 
   update(deltaTime) {
+    // Update eye height based on sneak state
+    const isSneaking = this.keys.sneak || this.sneakToggled
+    const targetEyeHeight = isSneaking ? this.sneakEyeHeight : this.baseEyeHeight
+    // Smooth transition
+    this.eyeHeight += (targetEyeHeight - this.eyeHeight) * Math.min(1, deltaTime * 10)
+
     if (this.flying) {
       this.updateFlying(deltaTime)
     } else {
@@ -287,7 +298,7 @@ export class Player {
     const newX = this.position.x + moveX
     if (!this.checkCollision(newX, this.position.y, this.position.z)) {
       // Sneak edge protection: don't walk off edges when sneaking and on ground
-      if (this.keys.sneak && this.onGround) {
+      if ((this.keys.sneak || this.sneakToggled) && this.onGround) {
         if (this.hasGroundSupport(newX, this.position.z)) {
           this.position.x = newX
         }
@@ -295,6 +306,20 @@ export class Player {
         this.position.x = newX
       }
     } else {
+      // Auto step up 1 block when on ground and not sneaking
+      if (this.onGround && !(this.keys.sneak || this.sneakToggled)) {
+        const maxStep = 1.01
+        // Find the highest step we can make
+        for (let step = maxStep; step > 0.1; step -= 0.1) {
+          const stepY = this.position.y + step
+          if (!this.checkCollision(newX, stepY, this.position.z)) {
+            this.position.x = newX
+            this.position.y = stepY
+            this.velocity.y = 0
+            break
+          }
+        }
+      }
       this.velocity.x = 0
     }
 
@@ -302,7 +327,7 @@ export class Player {
     const newZ = this.position.z + moveZ
     if (!this.checkCollision(this.position.x, this.position.y, newZ)) {
       // Sneak edge protection: don't walk off edges when sneaking and on ground
-      if (this.keys.sneak && this.onGround) {
+      if ((this.keys.sneak || this.sneakToggled) && this.onGround) {
         if (this.hasGroundSupport(this.position.x, newZ)) {
           this.position.z = newZ
         }
@@ -310,6 +335,20 @@ export class Player {
         this.position.z = newZ
       }
     } else {
+      // Auto step up 1 block when on ground and not sneaking
+      if (this.onGround && !(this.keys.sneak || this.sneakToggled)) {
+        const maxStep = 1.01
+        // Find the highest step we can make
+        for (let step = maxStep; step > 0.1; step -= 0.1) {
+          const stepY = this.position.y + step
+          if (!this.checkCollision(this.position.x, stepY, newZ)) {
+            this.position.z = newZ
+            this.position.y = stepY
+            this.velocity.y = 0
+            break
+          }
+        }
+      }
       this.velocity.z = 0
     }
 
