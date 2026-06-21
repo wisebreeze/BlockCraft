@@ -10,6 +10,11 @@ export class World {
     this.chunks = new Map() // key: "chunkX,chunkZ"
     this.viewDistance = 2 // Chunk render distance (2 = 5x5 chunks)
 
+    // Chunk loading queues for staggered loading (prevents frame drops)
+    this._loadQueue = [] // Chunks waiting to be generated
+    this._buildQueue = [] // Chunks waiting to have meshes built
+    this._chunksPerFrame = 1 // Number of chunks to process per frame
+
     this.geometry = new THREE.BoxGeometry(1, 1, 1)
 
     // Pre-create materials for each block type
@@ -97,25 +102,6 @@ export class World {
     return data ? data.solid : false
   }
 
-  // Load a chunk
-  loadChunk(chunkX, chunkZ) {
-    if (this.getChunk(chunkX, chunkZ)) return
-
-    const chunk = new Chunk(chunkX, chunkZ, this)
-    chunk.generate()
-    this.chunks.set(this.getChunkKey(chunkX, chunkZ), chunk)
-
-    // Generate trees for this chunk
-    this.generateTreesForChunk(chunk)
-
-    // Clear spawn area if this is the spawn chunk
-    if (chunkX === 0 && chunkZ === 0) {
-      this.clearSpawnArea()
-    }
-
-    chunk.buildMeshes()
-  }
-
   // Unload a chunk
   unloadChunk(chunkX, chunkZ) {
     const chunk = this.getChunk(chunkX, chunkZ)
@@ -134,41 +120,124 @@ export class World {
 
     // Collect needed chunks
     const neededChunks = new Set()
+    const newChunksToLoad = []
+
     for (let dx = -viewDist; dx <= viewDist; dx++) {
       for (let dz = -viewDist; dz <= viewDist; dz++) {
         const cx = playerChunkX + dx
         const cz = playerChunkZ + dz
-        neededChunks.add(this.getChunkKey(cx, cz))
+        const key = this.getChunkKey(cx, cz)
+        neededChunks.add(key)
+
+        // Check if this chunk needs to be loaded
+        if (!this.chunks.has(key) && !this._isInQueue(cx, cz)) {
+          // Calculate distance for priority sorting
+          const dist = Math.abs(dx) + Math.abs(dz)
+          newChunksToLoad.push({ cx, cz, dist })
+        }
       }
     }
 
-    // Unload unneeded chunks
+    // Sort by distance (closer first)
+    newChunksToLoad.sort((a, b) => a.dist - b.dist)
+
+    // Add new chunks to load queue
+    for (const chunk of newChunksToLoad) {
+      this._loadQueue.push({ cx: chunk.cx, cz: chunk.cz })
+    }
+
+    // Unload unneeded chunks (immediate, unloading is fast)
     for (const [key, chunk] of this.chunks) {
       if (!neededChunks.has(key)) {
         this.unloadChunk(chunk.chunkX, chunk.chunkZ)
       }
     }
 
-    // Load new chunks
-    for (const key of neededChunks) {
-      if (!this.chunks.has(key)) {
-        const [cx, cz] = key.split(',').map(Number)
-        this.loadChunk(cx, cz)
+    // Also remove unneeded chunks from queues
+    this._loadQueue = this._loadQueue.filter(item => {
+      const key = this.getChunkKey(item.cx, item.cz)
+      return neededChunks.has(key)
+    })
+    this._buildQueue = this._buildQueue.filter(item => {
+      const key = this.getChunkKey(item.cx, item.cz)
+      return neededChunks.has(key)
+    })
+
+    // Process chunk queues (staggered loading to prevent frame drops)
+    this._processChunkQueues()
+  }
+
+  // Check if a chunk is already in any queue
+  _isInQueue(chunkX, chunkZ) {
+    for (const item of this._loadQueue) {
+      if (item.cx === chunkX && item.cz === chunkZ) return true
+    }
+    for (const item of this._buildQueue) {
+      if (item.cx === chunkX && item.cz === chunkZ) return true
+    }
+    return false
+  }
+
+  // Process chunk loading queues
+  _processChunkQueues() {
+    let processed = 0
+
+    // First process build queue (faster, just mesh building)
+    while (processed < this._chunksPerFrame && this._buildQueue.length > 0) {
+      const item = this._buildQueue.shift()
+      const chunk = this.getChunk(item.cx, item.cz)
+      if (chunk && !chunk.built) {
+        chunk.buildMeshes()
+        processed++
       }
     }
 
-    // Rebuild dirty chunks
-    for (const [key, chunk] of this.chunks) {
-      if (!chunk.built) {
-        chunk.buildMeshes()
+    // Then process load queue (slower, terrain generation)
+    while (processed < this._chunksPerFrame && this._loadQueue.length > 0) {
+      const item = this._loadQueue.shift()
+      this._doLoadChunk(item.cx, item.cz)
+      processed++
+    }
+
+    // Also rebuild any dirty chunks (from block edits)
+    if (processed < this._chunksPerFrame) {
+      for (const [key, chunk] of this.chunks) {
+        if (!chunk.built && !this._isInQueue(chunk.chunkX, chunk.chunkZ)) {
+          chunk.buildMeshes()
+          processed++
+          if (processed >= this._chunksPerFrame) break
+        }
       }
     }
   }
 
-  // Generate trees for a chunk
+  // Actually load and generate a chunk
+  _doLoadChunk(chunkX, chunkZ) {
+    if (this.getChunk(chunkX, chunkZ)) return
+
+    const chunk = new Chunk(chunkX, chunkZ, this)
+    chunk.generate()
+    this.chunks.set(this.getChunkKey(chunkX, chunkZ), chunk)
+
+    // Generate trees for this chunk
+    this.generateTreesForChunk(chunk)
+
+    // Clear spawn area if this is the spawn chunk
+    if (chunkX === 0 && chunkZ === 0) {
+      this.clearSpawnArea()
+    }
+
+    // Add to build queue for mesh construction
+    this._buildQueue.push({ cx: chunkX, cz: chunkZ })
+  }
+
+  // Generate trees for a chunk with proper 3x3 spacing (cross-chunk consistent)
   generateTreesForChunk(chunk) {
     const spawnClearRadius = 5
+    const treeSpacing = 3 // 3x3 grid spacing
 
+    // Only generate trees whose trunk position is within this chunk
+    // This ensures consistent spacing across chunk boundaries
     for (let x = 0; x < this.chunkSize; x++) {
       for (let z = 0; z < this.chunkSize; z++) {
         const worldX = chunk.chunkX * this.chunkSize + x
@@ -179,12 +248,21 @@ export class World {
           continue
         }
 
+        // Only consider positions that are the "center" of a 3x3 grid cell
+        // This ensures exactly one tree per 3x3 area, consistent across chunks
+        const gridX = Math.floor(worldX / treeSpacing)
+        const gridZ = Math.floor(worldZ / treeSpacing)
+        const cellCenterX = gridX * treeSpacing + 1 // Center of 3x3 cell
+        const cellCenterZ = gridZ * treeSpacing + 1
+
+        if (worldX !== cellCenterX || worldZ !== cellCenterZ) {
+          continue
+        }
+
         const height = this.getHeight(worldX, worldZ)
 
-        // Tree placement noise
-        if (this.noise2D(worldX * 0.08, worldZ * 0.08) > 0.96 && height > 5) {
-          // Simple 3x3 spacing check within this column
-          // (Full cross-chunk spacing would require more complex logic)
+        // Tree placement noise - use grid cell coordinates for deterministic result
+        if (this.noise2D(gridX * 0.5, gridZ * 0.5) > 0.75 && height > 5) {
           this.generateTree(worldX, height, worldZ)
         }
       }
