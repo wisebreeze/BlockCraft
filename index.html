@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>BlockCraft</title>
+  <link rel="stylesheet" href="/src/style.css" />
+</head>
+<body>
+  <div id="game-container">
+    <canvas id="game-canvas"></canvas>
+
+    <!-- Crosshair -->
+    <div id="crosshair">
+      <div class="crosshair-h"></div>
+      <div class="crosshair-v"></div>
+    </div>
+
+    <!-- Hotbar -->
+    <div id="hotbar">
+      <div class="hotbar-slot" data-index="0">
+        <img src="/assets/blocks/grass_top.png" alt="Grass" />
+        <span class="slot-number">1</span>
+      </div>
+      <div class="hotbar-slot" data-index="1">
+        <img src="/assets/blocks/planks_oak.png" alt="Planks" />
+        <span class="slot-number">2</span>
+      </div>
+      <div class="hotbar-slot" data-index="2">
+        <img src="/assets/blocks/log_oak.png" alt="Log" />
+        <span class="slot-number">3</span>
+      </div>
+      <div class="hotbar-slot" data-index="3">
+        <img src="/assets/blocks/leaves_oak_carried.tga" alt="Leaves" />
+        <span class="slot-number">4</span>
+      </div>
+      <div class="hotbar-slot" data-index="4">
+        <img src="/assets/blocks/cauldron_water.png" alt="Water" />
+        <span class="slot-number">5</span>
+      </div>
+      <div class="hotbar-slot" data-index="5">
+        <img src="/assets/blocks/grass_side_carried.png" alt="Dirt" />
+        <span class="slot-number">6</span>
+      </div>
+      <div class="hotbar-slot" data-index="6">
+        <img src="/assets/blocks/grass_carried.png" alt="Grass Side" />
+        <span class="slot-number">7</span>
+      </div>
+      <div class="hotbar-slot" data-index="7">
+        <img src="/assets/blocks/log_oak_top.png" alt="Log Top" />
+        <span class="slot-number">8</span>
+      </div>
+      <div class="hotbar-slot selected" data-index="8">
+        <img src="/assets/blocks/water_still.png" alt="Still Water" />
+        <span class="slot-number">9</span>
+      </div>
+    </div>
+
+    <!-- Mobile Controls -->
+    <div id="mobile-controls">
+      <!-- Joystick -->
+      <div id="joystick-area">
+        <div id="joystick-frame">
+          <div id="joystick-knob"></div>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div id="action-buttons">
+        <button id="btn-jump" class="action-btn">
+          <img src="/assets/ui/jump.png" alt="Jump" />
+        </button>
+        <button id="btn-sneak" class="action-btn">
+          <img src="/assets/ui/sneak.png" alt="Sneak" />
+        </button>
+        <button id="btn-fly-up" class="action-btn">
+          <img src="/assets/ui/flyingascend.png" alt="Fly Up" />
+        </button>
+        <button id="btn-fly-down" class="action-btn">
+          <img src="/assets/ui/flyingdescend.png" alt="Fly Down" />
+        </button>
+      </div>
+
+      <!-- Break/Place Buttons -->
+      <div id="build-buttons">
+        <button id="btn-break" class="build-btn">Break</button>
+        <button id="btn-place" class="build-btn">Place</button>
+      </div>
+    </div>
+
+    <!-- Start Screen -->
+    <div id="start-screen">
+      <div class="start-content">
+        <h1>BlockCraft</h1>
+        <p>Web implementation of simplified Minecraft gameplay</p>
+        <button id="start-btn">Click to Play</button>
+        <div class="controls-info">
+          <p><strong>Desktop:</strong> WASD to move, Mouse to look, Left Click to break, Right Click to place, Space to jump, Shift to sneak, 1-9 to select blocks</p>
+          <p><strong>Mobile:</strong> Use joystick to move, touch buttons for actions</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>

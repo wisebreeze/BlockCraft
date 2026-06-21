@@ -1,0 +1,316 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: #000;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+#game-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+#game-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* Crosshair */
+#crosshair {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  z-index: 10;
+}
+
+.crosshair-h,
+.crosshair-v {
+  position: absolute;
+  background: #fff;
+  box-shadow: 0 0 2px rgba(0, 0, 0, 0.8);
+}
+
+.crosshair-h {
+  width: 20px;
+  height: 2px;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.crosshair-v {
+  width: 2px;
+  height: 20px;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+/* Hotbar */
+#hotbar {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  background: rgba(0, 0, 0, 0.5);
+  border: 2px solid #333;
+  border-radius: 4px;
+  z-index: 20;
+}
+
+.hotbar-slot {
+  position: relative;
+  width: 50px;
+  height: 50px;
+  background: rgba(139, 139, 139, 0.5);
+  border: 2px solid #555;
+  border-radius: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.1s ease;
+}
+
+.hotbar-slot:hover {
+  border-color: #888;
+}
+
+.hotbar-slot.selected {
+  border-color: #fff;
+  background: rgba(255, 255, 255, 0.2);
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+}
+
+.hotbar-slot img {
+  width: 36px;
+  height: 36px;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+
+.slot-number {
+  position: absolute;
+  top: 2px;
+  left: 4px;
+  font-size: 10px;
+  color: #fff;
+  text-shadow: 1px 1px 1px #000;
+  font-weight: bold;
+}
+
+/* Mobile Controls */
+#mobile-controls {
+  display: none;
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  z-index: 30;
+}
+
+@media (max-width: 768px), (pointer: coarse) {
+  #mobile-controls {
+    display: block;
+  }
+}
+
+/* Joystick */
+#joystick-area {
+  position: absolute;
+  bottom: 100px;
+  left: 40px;
+  width: 150px;
+  height: 150px;
+  pointer-events: auto;
+}
+
+#joystick-frame {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.3);
+  border: 3px solid rgba(255, 255, 255, 0.4);
+  border-radius: 50%;
+}
+
+#joystick-knob {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 60px;
+  height: 60px;
+  background: rgba(255, 255, 255, 0.6);
+  border: 2px solid rgba(255, 255, 255, 0.8);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  transition: transform 0.05s ease-out;
+}
+
+/* Action Buttons */
+#action-buttons {
+  position: absolute;
+  bottom: 120px;
+  right: 30px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  pointer-events: auto;
+}
+
+.action-btn {
+  width: 60px;
+  height: 60px;
+  border: 2px solid rgba(255, 255, 255, 0.5);
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.4);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
+.action-btn:active {
+  background: rgba(255, 255, 255, 0.3);
+  transform: scale(0.95);
+}
+
+.action-btn img {
+  width: 36px;
+  height: 36px;
+  image-rendering: pixelated;
+}
+
+/* Build Buttons */
+#build-buttons {
+  position: absolute;
+  bottom: 200px;
+  right: 110px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  pointer-events: auto;
+}
+
+.build-btn {
+  width: 70px;
+  height: 70px;
+  border: 3px solid rgba(255, 255, 255, 0.6);
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.5);
+  color: #fff;
+  font-size: 14px;
+  font-weight: bold;
+  cursor: pointer;
+  text-transform: uppercase;
+}
+
+.build-btn:active {
+  background: rgba(255, 255, 255, 0.3);
+  transform: scale(0.95);
+}
+
+#btn-break {
+  border-color: rgba(255, 100, 100, 0.7);
+}
+
+#btn-place {
+  border-color: rgba(100, 255, 100, 0.7);
+}
+
+/* Start Screen */
+#start-screen {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+
+#start-screen.hidden {
+  display: none;
+}
+
+.start-content {
+  text-align: center;
+  color: #fff;
+  padding: 40px;
+}
+
+.start-content h1 {
+  font-size: 48px;
+  margin-bottom: 10px;
+  text-shadow: 3px 3px 0 #333;
+  letter-spacing: 2px;
+}
+
+.start-content > p {
+  font-size: 16px;
+  color: #aaa;
+  margin-bottom: 30px;
+}
+
+#start-btn {
+  padding: 15px 40px;
+  font-size: 18px;
+  background: #4a4;
+  color: #fff;
+  border: 3px solid #2a2;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  transition: all 0.2s ease;
+}
+
+#start-btn:hover {
+  background: #5b5;
+  transform: scale(1.05);
+}
+
+#start-btn:active {
+  transform: scale(0.98);
+}
+
+.controls-info {
+  margin-top: 40px;
+  padding-top: 20px;
+  border-top: 1px solid #333;
+}
+
+.controls-info p {
+  font-size: 13px;
+  color: #888;
+  margin: 8px 0;
+  line-height: 1.5;
+}
+
+.controls-info strong {
+  color: #aaa;
+}
