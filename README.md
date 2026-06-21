@@ -2,173 +2,170 @@
 
 <div align="center">
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Three.js](https://img.shields.io/badge/Three.js-0.167-blue)](https://threejs.org/)
-[![Vite](https://img.shields.io/badge/Vite-5.4-646CFF)](https://vitejs.dev/)
+[![English](https://img.shields.io/badge/lang-English-blue.svg)](README.md)
+[![中文](https://img.shields.io/badge/lang-中文-red.svg)](README.zh-CN.md)
 
-一个基于 Web 的简化版 Minecraft 实现
+A simplified Minecraft-like voxel game built with Three.js and Vite.
 
-[English](README.en.md) | 简体中文
+![License](https://img.shields.io/badge/license-MIT-green)
+![Version](https://img.shields.io/badge/version-0.1.0-blue)
+![Three.js](https://img.shields.io/badge/Three.js-0.167.0-lightgrey)
+![Vite](https://img.shields.io/badge/Vite-5.4.0-yellow)
 
 </div>
 
-## 项目简介
+## 📖 Introduction
 
-BlockCraft 是一个使用 Three.js 和 Vite 构建的网页版 Minecraft 简化实现。项目旨在展示如何使用现代 Web 技术创建 3D 体素游戏，支持桌面端和移动端。
+BlockCraft is a web-based implementation of simplified Minecraft gameplay. It's built entirely with JavaScript using Three.js for 3D rendering and Vite as the build tool. This project is created for educational purposes to demonstrate voxel rendering, procedural terrain generation, and basic game mechanics.
 
-> ⚠️ **注意**：这不是官方 Minecraft 产品。本项目仅用于教育目的。
+> **Note**: This is NOT an official Minecraft product. See [Disclaimer](#-disclaimer) for details.
 
-## 功能特性
+## ✨ Features
 
-### 🎮 游戏玩法
-- **第一人称视角** - 沉浸式 3D 体验
-- **方块建造与破坏** - 左键破坏，右键放置
-- **程序化地形生成** - 基于噪声的随机地形
-- **物品栏系统** - 破坏方块获得，放置方块消耗
-- **多种方块类型** - 草方块、泥土、石头、木头、树叶、木板、水、沙子、圆石、基岩
+- **3D Voxel Rendering** - Built with Three.js, featuring face culling optimization
+- **Procedural Terrain Generation** - Multi-layer noise-based terrain with grass, dirt, stone, trees, and water
+- **First Person Controller** - WASD movement, mouse look, jump, sneak, and sprint
+- **Building System** - Break blocks with left click, place blocks with right click
+- **Inventory System** - Collect blocks by breaking them, consume blocks when placing
+- **Hotbar** - 9 slots with number keys 1-9 and mouse wheel switching
+- **Flight Mode** - Press F to toggle free flight mode
+- **Mobile Support** - Virtual joystick, touch look, and on-screen action buttons
+- **Colored Grayscale Textures** - Dynamic color tinting for grayscale block textures
+- **Bedrock** - Unbreakable bedrock layer at the bottom
 
-### 🕹️ 操作控制
-- **键盘鼠标** - WASD 移动，鼠标视角，空格跳跃
-- **移动端触控** - 虚拟摇杆移动，触控视角，动作按钮
-- **飞行模式** - F 键切换，自由飞行
-- **疾跑与潜行** - Shift 潜行，Ctrl 疾跑
+## 🚀 Getting Started
 
-### 🎨 视觉效果
-- **体素渲染** - 面剔除优化性能
-- **天空盒与雾效** - 营造氛围
-- **方块高亮** - 准星指向的方块高亮显示
-- **灰度图着色** - 支持给灰度纹理动态着色
+### Prerequisites
 
-### 📱 跨平台支持
-- **桌面端** - 完整的键盘鼠标支持
-- **移动端** - 虚拟摇杆 + 触控操作
-- **响应式** - 自适应不同屏幕尺寸
-
-## 快速开始
-
-### 环境要求
 - Node.js >= 16.0.0
 - npm >= 7.0.0
 
-### 安装
+### Installation
 
 ```bash
-# 克隆仓库
+# Clone the repository
 git clone https://github.com/wisebreeze/BlockCraft.git
 
-# 进入项目目录
+# Navigate to project directory
 cd BlockCraft
 
-# 安装依赖
+# Install dependencies
 npm install
 ```
 
-### 开发模式
+### Development
 
 ```bash
+# Start development server
 npm run dev
 ```
 
-启动后在浏览器中打开 `http://localhost:5173`
+The game will be available at `http://localhost:5173`
 
-### 生产构建
+### Build
 
 ```bash
+# Build for production
 npm run build
 ```
 
-构建产物将输出到 `dist` 目录。
+The built files will be in the `dist` directory.
 
-### 预览构建
+### Preview
 
 ```bash
+# Preview production build
 npm run preview
 ```
 
-## 操作说明
+## 🎮 Controls
 
-### 桌面端
+### Keyboard
 
-| 操作 | 按键 |
-|------|------|
-| 前进 | W |
-| 后退 | S |
-| 左移 | A |
-| 右移 | D |
-| 跳跃 | Space |
-| 潜行 | Shift |
-| 疾跑 | Ctrl |
-| 飞行模式 | F |
-| 破坏方块 | 鼠标左键 |
-| 放置方块 | 鼠标右键 |
-| 切换方块 | 数字键 1-9 / 鼠标滚轮 |
-| 释放鼠标 | Esc |
+| Key | Action |
+|-----|--------|
+| W | Move Forward |
+| S | Move Backward |
+| A | Move Left |
+| D | Move Right |
+| Space | Jump |
+| Shift | Sneak |
+| Ctrl | Sprint |
+| F | Toggle Flight Mode |
+| 1-9 | Select Hotbar Slot |
+| Mouse Wheel | Switch Hotbar Slot |
+| Left Click | Break Block |
+| Right Click | Place Block |
+| ESC | Release Mouse |
 
-### 移动端
+### Mobile
 
-| 操作 | 方式 |
-|------|------|
-| 移动 | 左侧虚拟摇杆 |
-| 视角 | 右侧屏幕滑动 |
-| 跳跃 | 跳跃按钮 |
-| 潜行 | 潜行按钮 |
-| 飞行上升 | 飞行上升按钮（双击切换飞行） |
-| 飞行下降 | 飞行下降按钮 |
-| 破坏方块 | 破坏按钮 |
-| 放置方块 | 放置按钮 |
-| 切换方块 | 点击快捷栏 |
+| Control | Action |
+|---------|--------|
+| Left Joystick | Move |
+| Right Side Drag | Look Around |
+| Jump Button | Jump |
+| Sneak Button | Sneak |
+| Fly Up Button | Fly Up (double tap to toggle flight) |
+| Fly Down Button | Fly Down |
+| Break Button | Break Block |
+| Place Button | Place Block |
 
-## 技术栈
+## 🛠️ Tech Stack
 
-- **渲染引擎** - [Three.js](https://threejs.org/)
-- **构建工具** - [Vite](https://vitejs.dev/)
-- **语言** - JavaScript (ES6+)
-- **样式** - CSS3
+- **[Three.js](https://threejs.org/)** - 3D rendering engine
+- **[Vite](https://vitejs.dev/)** - Next generation frontend tooling
+- **JavaScript (ES6+)** - Core programming language
+- **HTML5 Canvas** - 2D UI rendering
 
-## 项目结构
+## 📁 Project Structure
 
 ```
 BlockCraft/
 ├── public/
-│   └── assets/              # 静态资源
-│       ├── blocks/          # 方块贴图
-│       └── ui/              # UI 贴图
+│   └── assets/
+│       ├── blocks/          # Block textures
+│       └── ui/              # UI textures (hotbar, joystick, buttons)
 ├── src/
 │   ├── game/
-│   │   ├── BlockTypes.js    # 方块类型定义
-│   │   ├── World.js         # 世界管理与地形生成
-│   │   ├── Player.js        # 玩家控制与物理
-│   │   └── Game.js          # 游戏主循环
-│   ├── main.js              # 入口文件
-│   └── style.css            # 样式
-├── index.html               # HTML 模板
+│   │   ├── BlockTypes.js    # Block type definitions and materials
+│   │   ├── World.js         # World management and terrain generation
+│   │   ├── Player.js        # Player controls and physics
+│   │   └── Game.js          # Main game loop
+│   ├── main.js              # Entry point
+│   └── style.css            # Styles
+├── index.html
 ├── package.json
 ├── vite.config.js
 └── README.md
 ```
 
-## 方块列表
+## 🧱 Block Types
 
-| ID | 名称 | 特性 |
-|----|------|------|
-| 0 | 空气 (Air) | 非实体 |
-| 1 | 草方块 (Grass) | 实体 |
-| 2 | 泥土 (Dirt) | 实体 |
-| 3 | 石头 (Stone) | 实体 |
-| 4 | 橡木原木 (Wood) | 实体 |
-| 5 | 橡树叶 (Leaves) | 实体、透明 |
-| 6 | 橡木木板 (Planks) | 实体 |
-| 7 | 水 (Water) | 非实体、透明 |
-| 8 | 沙子 (Sand) | 实体 |
-| 9 | 圆石 (Cobblestone) | 实体 |
-| 10 | 基岩 (Bedrock) | 实体、不可破坏 |
+| ID | Name | Solid | Transparent |
+|----|------|-------|-------------|
+| 0 | Air | ❌ | ✅ |
+| 1 | Grass | ✅ | ❌ |
+| 2 | Dirt | ✅ | ❌ |
+| 3 | Stone | ✅ | ❌ |
+| 4 | Oak Log | ✅ | ❌ |
+| 5 | Oak Leaves | ✅ | ✅ |
+| 6 | Oak Planks | ✅ | ❌ |
+| 7 | Water | ❌ | ✅ |
+| 8 | Sand | ✅ | ❌ |
+| 9 | Cobblestone | ✅ | ❌ |
+| 10 | Bedrock | ✅ | ❌ |
 
-## 免责声明
+> **Note**: Bedrock is unbreakable.
 
-本项目 **不是** 官方 Minecraft 产品。这是一个出于教育目的创建的简化 Web 实现。
+## ⚠️ Disclaimer
 
-本项目中使用的所有纹理和资源均为 Mojang Studios 和 Microsoft 的财产。本项目与 Mojang Studios 或 Microsoft 没有任何关联、认可或联系。
+This is **NOT** an official Minecraft product. It is a simplified web-based implementation created for educational purposes.
 
-## 许可证
+All textures and assets used in this project are the property of Mojang Studios and Microsoft. This project is not affiliated with, endorsed by, or connected to Mojang Studios or Microsoft in any way.
 
-[MIT License](LICENSE)
+## 📄 License
+
+This project is for educational purposes only. All game textures are property of their respective owners.
+
+The code in this project is provided as-is for learning purposes.
