@@ -334,33 +334,15 @@ export class Game {
       this.player.keys.sneak = false
     })
 
-    // Build buttons
-    const btnBreak = document.getElementById('btn-break')
-    const btnPlace = document.getElementById('btn-place')
-
-    btnBreak.addEventListener('touchstart', (e) => {
-      e.preventDefault()
-      e.stopPropagation()
-      this.breakBlock()
-    })
-    btnBreak.addEventListener('touchend', (e) => {
-      e.preventDefault()
-      e.stopPropagation()
-    })
-
-    btnPlace.addEventListener('touchstart', (e) => {
-      e.preventDefault()
-      e.stopPropagation()
-      this.placeBlock()
-    })
-    btnPlace.addEventListener('touchend', (e) => {
-      e.preventDefault()
-      e.stopPropagation()
-    })
-
-    // Touch look (right side of screen)
+    // Touch look (right side of screen) with tap to place and long press to break
     let lookTouchId = null
     let lastTouchPos = { x: 0, y: 0 }
+    let touchStartTime = 0
+    let touchStartPos = { x: 0, y: 0 }
+    let hasMoved = false
+    let longPressTimer = null
+    const longPressDelay = 400 // ms for long press to break block
+    const moveThreshold = 10 // pixels to count as movement
 
     this.canvas.addEventListener('touchstart', (e) => {
       if (lookTouchId !== null) return
@@ -372,6 +354,17 @@ export class Game {
         if (touch.clientX > window.innerWidth * 0.4) {
           lookTouchId = touch.identifier
           lastTouchPos = { x: touch.clientX, y: touch.clientY }
+          touchStartTime = Date.now()
+          touchStartPos = { x: touch.clientX, y: touch.clientY }
+          hasMoved = false
+
+          // Start long press timer for breaking blocks
+          longPressTimer = setTimeout(() => {
+            if (!hasMoved && lookTouchId === touch.identifier) {
+              this.breakBlock()
+              // Visual feedback could be added here
+            }
+          }, longPressDelay)
           break
         }
       }
@@ -385,11 +378,23 @@ export class Game {
 
       e.preventDefault()
 
-      const dx = touch.clientX - lastTouchPos.x
-      const dy = touch.clientY - lastTouchPos.y
+      // Check if movement exceeds threshold
+      const dx = touch.clientX - touchStartPos.x
+      const dy = touch.clientY - touchStartPos.y
+      if (Math.abs(dx) > moveThreshold || Math.abs(dy) > moveThreshold) {
+        hasMoved = true
+        // Cancel long press if moved
+        if (longPressTimer) {
+          clearTimeout(longPressTimer)
+          longPressTimer = null
+        }
+      }
 
-      this.player.yaw -= dx * 0.005
-      this.player.pitch -= dy * 0.005
+      const moveDx = touch.clientX - lastTouchPos.x
+      const moveDy = touch.clientY - lastTouchPos.y
+
+      this.player.yaw -= moveDx * 0.005
+      this.player.pitch -= moveDy * 0.005
       this.player.pitch = Math.max(-Math.PI / 2 + 0.01, Math.min(Math.PI / 2 - 0.01, this.player.pitch))
 
       lastTouchPos = { x: touch.clientX, y: touch.clientY }
@@ -398,6 +403,18 @@ export class Game {
     this.canvas.addEventListener('touchend', (e) => {
       for (let i = 0; i < e.changedTouches.length; i++) {
         if (e.changedTouches[i].identifier === lookTouchId) {
+          // Clear long press timer
+          if (longPressTimer) {
+            clearTimeout(longPressTimer)
+            longPressTimer = null
+          }
+
+          // If it was a tap (short press, no movement), place block
+          const touchDuration = Date.now() - touchStartTime
+          if (!hasMoved && touchDuration < longPressDelay) {
+            this.placeBlock()
+          }
+
           lookTouchId = null
           break
         }
@@ -405,6 +422,10 @@ export class Game {
     })
 
     this.canvas.addEventListener('touchcancel', (e) => {
+      if (longPressTimer) {
+        clearTimeout(longPressTimer)
+        longPressTimer = null
+      }
       lookTouchId = null
     })
   }
