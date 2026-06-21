@@ -152,6 +152,8 @@ html, body {
   background-size: contain;
   background-repeat: no-repeat;
   background-position: center;
+  /* Red UI style */
+  filter: sepia(1) saturate(8) hue-rotate(-50deg) brightness(0.9);
 }
 
 #joystick-knob {
@@ -166,6 +168,8 @@ html, body {
   background-position: center;
   transform: translate(-50%, -50%);
   transition: transform 0.05s ease-out;
+  /* Red UI style */
+  filter: sepia(1) saturate(10) hue-rotate(-55deg) brightness(0.85);
 }
 
 /* Action Buttons */

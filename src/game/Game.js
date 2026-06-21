@@ -248,39 +248,47 @@ export class Game {
 
     btnJump.addEventListener('touchstart', (e) => {
       e.preventDefault()
+      e.stopPropagation()
       this.player.keys.jump = true
     })
     btnJump.addEventListener('touchend', (e) => {
       e.preventDefault()
+      e.stopPropagation()
       this.player.keys.jump = false
     })
 
     btnSneak.addEventListener('touchstart', (e) => {
       e.preventDefault()
+      e.stopPropagation()
       this.player.keys.sneak = true
     })
     btnSneak.addEventListener('touchend', (e) => {
       e.preventDefault()
+      e.stopPropagation()
       this.player.keys.sneak = false
     })
 
     btnFlyUp.addEventListener('touchstart', (e) => {
       e.preventDefault()
+      e.stopPropagation()
       this.player.flying = true
       this.player.keys.jump = true
     })
     btnFlyUp.addEventListener('touchend', (e) => {
       e.preventDefault()
+      e.stopPropagation()
       this.player.keys.jump = false
     })
 
     btnFlyDown.addEventListener('touchstart', (e) => {
       e.preventDefault()
+      e.stopPropagation()
       this.player.flying = true
       this.player.keys.sneak = true
     })
     btnFlyDown.addEventListener('touchend', (e) => {
       e.preventDefault()
+      e.stopPropagation()
       this.player.keys.sneak = false
     })
 
@@ -290,12 +298,22 @@ export class Game {
 
     btnBreak.addEventListener('touchstart', (e) => {
       e.preventDefault()
+      e.stopPropagation()
       this.breakBlock()
+    })
+    btnBreak.addEventListener('touchend', (e) => {
+      e.preventDefault()
+      e.stopPropagation()
     })
 
     btnPlace.addEventListener('touchstart', (e) => {
       e.preventDefault()
+      e.stopPropagation()
       this.placeBlock()
+    })
+    btnPlace.addEventListener('touchend', (e) => {
+      e.preventDefault()
+      e.stopPropagation()
     })
 
     // Touch look (right side of screen)
