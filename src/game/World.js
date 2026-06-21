@@ -33,6 +33,8 @@ export class World {
     if (type === BlockTypes.AIR) {
       this.blocks.delete(key)
       this.removeBlockMesh(x, y, z)
+      // Update neighbors to show newly exposed faces
+      this.updateNeighbors(x, y, z)
     } else {
       this.blocks.set(key, type)
       this.updateBlockMesh(x, y, z, type)

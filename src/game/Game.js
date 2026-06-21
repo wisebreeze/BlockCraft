@@ -141,7 +141,7 @@ export class Game {
   }
 
   setupUI() {
-    // Start button
+    // Start button (kept for reference, but game auto-starts now)
     const startBtn = document.getElementById('start-btn')
     const startScreen = document.getElementById('start-screen')
 
@@ -150,6 +150,10 @@ export class Game {
       this.start()
       this.canvas.requestPointerLock()
     })
+
+    // Auto-start game
+    startScreen.classList.add('hidden')
+    this.start()
 
     // Hotbar slots
     const slots = document.querySelectorAll('.hotbar-slot')
