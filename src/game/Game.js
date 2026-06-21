@@ -22,7 +22,7 @@ export class Game {
     // Scene
     this.scene = new THREE.Scene()
     this.scene.background = new THREE.Color(0x87CEEB)
-    this.scene.fog = new THREE.Fog(0x87CEEB, 20, 60)
+    this.scene.fog = new THREE.Fog(0x87CEEB, 12, 24)
 
     // Camera
     this.camera = new THREE.PerspectiveCamera(
@@ -61,6 +61,9 @@ export class Game {
     this.player = new Player(this.camera, this.world)
     const spawnPos = this.world.getSpawnPosition()
     this.player.setPosition(spawnPos.x, spawnPos.y, spawnPos.z)
+
+    // Initial visibility culling
+    this.world.updateVisibility(spawnPos.x, spawnPos.y + this.player.eyeHeight, spawnPos.z)
 
     // Block highlight
     const highlightGeometry = new THREE.BoxGeometry(1.01, 1.01, 1.01)
@@ -649,6 +652,17 @@ export class Game {
 
     this.player.update(deltaTime)
     this.updateBlockHighlight()
+
+    // Update visibility culling every 2 frames for performance
+    this._visibilityFrame = (this._visibilityFrame || 0) + 1
+    if (this._visibilityFrame >= 2) {
+      this._visibilityFrame = 0
+      this.world.updateVisibility(
+        this.player.position.x,
+        this.player.position.y + this.player.eyeHeight,
+        this.player.position.z
+      )
+    }
 
     this.renderer.render(this.scene, this.camera)
   }

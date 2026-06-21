@@ -12,6 +12,7 @@ function loadTexture(path) {
   texture.wrapS = THREE.RepeatWrapping
   texture.wrapT = THREE.RepeatWrapping
   texture.colorSpace = THREE.SRGBColorSpace
+  texture.generateMipmaps = false
   return texture
 }
 

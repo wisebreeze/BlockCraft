@@ -9,6 +9,7 @@ export class World {
     this.blocks = new Map()
     this.meshes = new Map()
     this.geometry = new THREE.BoxGeometry(1, 1, 1)
+    this.viewDistance = 24 // Render distance in blocks
 
     // Pre-create materials for each block type
     this.materials = {}
@@ -282,5 +283,20 @@ export class World {
     }
 
     return { hit: false }
+  }
+
+  // Update block visibility based on player position (view distance culling)
+  updateVisibility(playerX, playerY, playerZ) {
+    const viewDist = this.viewDistance
+    const viewDistSq = viewDist * viewDist
+
+    for (const [key, mesh] of this.meshes) {
+      const dx = mesh.position.x - playerX
+      const dy = mesh.position.y - playerY
+      const dz = mesh.position.z - playerZ
+      const distSq = dx * dx + dy * dy + dz * dz
+
+      mesh.visible = distSq <= viewDistSq
+    }
   }
 }
