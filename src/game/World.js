@@ -205,7 +205,7 @@ export class World {
     const treeCandidates = []
     const spawnX = 0
     const spawnZ = 0
-    const spawnClearRadius = 3 // Keep 7x7 area around spawn clear of trees
+    const spawnClearRadius = 5 // Keep 11x11 area around spawn clear of trees (leaves extend 2 blocks)
     for (let x = -halfSize; x < halfSize; x++) {
       for (let z = -halfSize; z < halfSize; z++) {
         // Skip trees near spawn point
@@ -247,6 +247,19 @@ export class World {
         if (height < 3) {
           for (let y = height; y < 3; y++) {
             this.setBlock(x, y, z, BlockTypes.WATER)
+          }
+        }
+      }
+    }
+
+    // Clear spawn area to ensure player doesn't spawn inside blocks
+    const spawnAreaClearRadius = 2
+    const spawnGroundY = this.getHeight(0, 0)
+    for (let x = -spawnAreaClearRadius; x <= spawnAreaClearRadius; x++) {
+      for (let z = -spawnAreaClearRadius; z <= spawnAreaClearRadius; z++) {
+        for (let y = spawnGroundY; y < this.height; y++) {
+          if (this.getBlock(x, y, z) !== BlockTypes.AIR) {
+            this.setBlock(x, y, z, BlockTypes.AIR)
           }
         }
       }
