@@ -110,12 +110,6 @@ export class Player {
       case 'ControlRight':
         this.keys.sprint = true
         break
-      case 'KeyF':
-        this.flying = !this.flying
-        if (this.flying) {
-          this.velocity.y = 0
-        }
-        break
     }
   }
 

@@ -94,6 +94,11 @@ export class Game {
         const index = parseInt(e.code.slice(-1)) - 1
         this.selectBlock(index)
       }
+
+      // Flight mode toggle
+      if (e.code === 'KeyF') {
+        this.toggleFlight()
+      }
     })
 
     window.addEventListener('keyup', (e) => {
@@ -141,236 +146,6 @@ export class Game {
         this.selectBlock((this.selectedBlockIndex + 8) % 9)
       }
     })
-  }
-
-  setupUI() {
-    // Start button (kept for reference, but game auto-starts now)
-    const startBtn = document.getElementById('start-btn')
-    const startScreen = document.getElementById('start-screen')
-
-    startBtn.addEventListener('click', () => {
-      startScreen.classList.add('hidden')
-      this.start()
-      this.canvas.requestPointerLock()
-    })
-
-    // Auto-start game
-    startScreen.classList.add('hidden')
-    this.start()
-
-    // Hotbar slots
-    const slots = document.querySelectorAll('.hotbar-slot')
-    slots.forEach((slot, index) => {
-      slot.addEventListener('click', () => {
-        this.selectBlock(index)
-      })
-    })
-
-    // Initialize hotbar UI
-    this.updateHotbarUI()
-
-    // Mobile controls
-    this.setupMobileControls()
-  }
-
-  setupMobileControls() {
-    // Joystick
-    const joystickArea = document.getElementById('joystick-area')
-    const joystickKnob = document.getElementById('joystick-knob')
-    const joystickFrame = document.getElementById('joystick-frame')
-
-    let joystickTouchId = null
-    let joystickCenter = { x: 0, y: 0 }
-    const joystickRadius = 50 // Normal movement radius (size of the frame)
-    const joystickMaxRadius = 75 // Max drag distance (allows dragging outside the frame)
-    const sprintThreshold = 1.0 // Normalized value where sprint starts (1.0 = at frame edge)
-
-    function findTouchById(touchList, id) {
-      for (let i = 0; i < touchList.length; i++) {
-        if (touchList[i].identifier === id) return touchList[i]
-      }
-      return null
-    }
-
-    joystickArea.addEventListener('touchstart', (e) => {
-      e.preventDefault()
-      e.stopPropagation()
-      if (joystickTouchId !== null) return
-
-      const touch = e.changedTouches[0]
-      joystickTouchId = touch.identifier
-      this.player.joystick.active = true
-
-      const rect = joystickFrame.getBoundingClientRect()
-      joystickCenter = {
-        x: rect.left + rect.width / 2,
-        y: rect.top + rect.height / 2
-      }
-    })
-
-    joystickArea.addEventListener('touchmove', (e) => {
-      e.preventDefault()
-      e.stopPropagation()
-      if (joystickTouchId === null) return
-
-      const touch = findTouchById(e.touches, joystickTouchId)
-      if (!touch) return
-
-      let dx = touch.clientX - joystickCenter.x
-      let dy = touch.clientY - joystickCenter.y
-
-      const dist = Math.sqrt(dx * dx + dy * dy)
-      
-      // Clamp to max radius (allows dragging outside the frame for sprint)
-      if (dist > joystickMaxRadius) {
-        dx = (dx / dist) * joystickMaxRadius
-        dy = (dy / dist) * joystickMaxRadius
-      }
-
-      joystickKnob.style.transform = `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px))`
-
-      // Normalize based on normal radius (values > 1.0 mean sprint zone)
-      const normalizedX = dx / joystickRadius
-      const normalizedY = dy / joystickRadius
-      const normalizedDist = Math.sqrt(normalizedX * normalizedX + normalizedY * normalizedY)
-
-      this.player.joystick.x = normalizedX
-      this.player.joystick.y = normalizedY
-      this.player.joystick.sprint = normalizedDist >= sprintThreshold
-    })
-
-    joystickArea.addEventListener('touchend', (e) => {
-      e.preventDefault()
-      e.stopPropagation()
-      for (let i = 0; i < e.changedTouches.length; i++) {
-        if (e.changedTouches[i].identifier === joystickTouchId) {
-          joystickTouchId = null
-          this.player.joystick.active = false
-          this.player.joystick.x = 0
-          this.player.joystick.y = 0
-          this.player.joystick.sprint = false
-          joystickKnob.style.transform = 'translate(-50%, -50%)'
-          break
-        }
-      }
-    })
-
-    joystickArea.addEventListener('touchcancel', (e) => {
-      e.preventDefault()
-      e.stopPropagation()
-      joystickTouchId = null
-      this.player.joystick.active = false
-      this.player.joystick.x = 0
-      this.player.joystick.y = 0
-      this.player.joystick.sprint = false
-      joystickKnob.style.transform = 'translate(-50%, -50%)'
-    })
-
-    // Action buttons (merged: jump/fly-up and sneak/fly-down)
-    const btnActionUp = document.getElementById('btn-action-up')
-    const btnActionDown = document.getElementById('btn-action-down')
-    let lastUpTapTime = 0
-
-    // Update button styles based on flight mode
-    const updateActionButtons = () => {
-      if (this.player.flying) {
-        btnActionUp.classList.remove('btn-jump')
-        btnActionUp.classList.add('btn-fly-up')
-        btnActionDown.classList.remove('btn-sneak')
-        btnActionDown.classList.add('btn-fly-down')
-        // Reset sneak toggle when entering flight mode
-        this.player.sneakToggled = false
-        btnActionDown.classList.remove('sneak-active')
-      } else {
-        btnActionUp.classList.remove('btn-fly-up')
-        btnActionUp.classList.add('btn-jump')
-        btnActionDown.classList.remove('btn-fly-down')
-        btnActionDown.classList.add('btn-sneak')
-        // Update sneak active state
-        if (this.player.sneakToggled) {
-          btnActionDown.classList.add('sneak-active')
-        } else {
-          btnActionDown.classList.remove('sneak-active')
-        }
-      }
-    }
-
-    // Up button (jump / fly-up)
-    btnActionUp.addEventListener('touchstart', (e) => {
-      e.preventDefault()
-      e.stopPropagation()
-      btnActionUp.classList.add('pressed')
-
-      const now = Date.now()
-      // Double tap to toggle flight mode
-      if (now - lastUpTapTime < 300) {
-        this.player.flying = !this.player.flying
-        updateActionButtons()
-        if (!this.player.flying) {
-          this.player.keys.jump = false
-        }
-        lastUpTapTime = 0
-      } else {
-        if (this.player.flying) {
-          this.player.keys.jump = true
-        } else {
-          this.player.keys.jump = true
-        }
-        lastUpTapTime = now
-      }
-    })
-    btnActionUp.addEventListener('touchend', (e) => {
-      e.preventDefault()
-      e.stopPropagation()
-      btnActionUp.classList.remove('pressed')
-      this.player.keys.jump = false
-    })
-    btnActionUp.addEventListener('touchcancel', (e) => {
-      e.preventDefault()
-      e.stopPropagation()
-      btnActionUp.classList.remove('pressed')
-      this.player.keys.jump = false
-    })
-
-    // Down button (sneak toggle in normal mode / fly-down hold in flight mode)
-    btnActionDown.addEventListener('touchstart', (e) => {
-      e.preventDefault()
-      e.stopPropagation()
-      btnActionDown.classList.add('pressed')
-
-      if (this.player.flying) {
-        // Flight mode: hold to descend
-        this.player.keys.sneak = true
-      } else {
-        // Normal mode: toggle sneak on press
-        this.player.sneakToggled = !this.player.sneakToggled
-        if (this.player.sneakToggled) {
-          btnActionDown.classList.add('sneak-active')
-        } else {
-          btnActionDown.classList.remove('sneak-active')
-        }
-      }
-    })
-    btnActionDown.addEventListener('touchend', (e) => {
-      e.preventDefault()
-      e.stopPropagation()
-      btnActionDown.classList.remove('pressed')
-
-      if (this.player.flying) {
-        // Flight mode: release to stop descending
-        this.player.keys.sneak = false
-      }
-      // Normal mode: toggle already handled on touchstart
-    })
-    btnActionDown.addEventListener('touchcancel', (e) => {
-      e.preventDefault()
-      e.stopPropagation()
-      btnActionDown.classList.remove('pressed')
-
-      if (this.player.flying) {
-        this.player.keys.sneak = false
-      }
-    })
 
     // Touch look (right side of screen) with tap to place and long press to break
     let lookTouchId = null
@@ -382,13 +157,20 @@ export class Game {
     const longPressDelay = 400 // ms for long press to break block
     const moveThreshold = 10 // pixels to count as movement
 
+    function findTouchById(touchList, id) {
+      for (let i = 0; i < touchList.length; i++) {
+        if (touchList[i].identifier === id) return touchList[i]
+      }
+      return null
+    }
+
     this.canvas.addEventListener('touchstart', (e) => {
       if (lookTouchId !== null) return
 
-      // Find a touch on the right side of screen that isn't already handled
+      // Find a touch on the right side of screen
       for (let i = 0; i < e.changedTouches.length; i++) {
         const touch = e.changedTouches[i]
-        // Only use right side of screen for look, and avoid left side joystick area
+        // Only use right side of screen for look
         if (touch.clientX > window.innerWidth * 0.4) {
           lookTouchId = touch.identifier
           lastTouchPos = { x: touch.clientX, y: touch.clientY }
@@ -400,7 +182,6 @@ export class Game {
           longPressTimer = setTimeout(() => {
             if (!hasMoved && lookTouchId === touch.identifier) {
               this.breakBlock()
-              // Visual feedback could be added here
             }
           }, longPressDelay)
           break
@@ -466,6 +247,15 @@ export class Game {
       }
       lookTouchId = null
     })
+  }
+
+  toggleFlight() {
+    this.player.flying = !this.player.flying
+    if (this.player.flying) {
+      this.player.velocity.y = 0
+    }
+    // Notify React UI of flight mode change
+    this.onFlightChange?.(this.player.flying)
   }
 
   selectBlock(index) {
