@@ -36,13 +36,6 @@ export class Game {
 
     this.init()
     this.setupInput()
-
-    // Give some initial items for testing
-    this.addToInventory(BlockTypes.WOOD, 10)
-    this.addToInventory(BlockTypes.COBBLESTONE, 20)
-    this.addToInventory(ItemTypes.COAL, 5)
-    this.addToInventory(BlockTypes.IRON_ORE, 5)
-
     // Auto-start game (UI handled by React)
     this.start()
   }

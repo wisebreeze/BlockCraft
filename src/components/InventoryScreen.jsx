@@ -10,6 +10,102 @@ function InventoryScreen({ game, onClose }) {
   ])
   const [selectedSlot, setSelectedSlot] = useState(null) // For moving items
   const [previews, setPreviews] = useState({})
+  const [longPressTimer, setLongPressTimer] = useState(null)
+  const [isLongPress, setIsLongPress] = useState(false)
+
+  const longPressDelay = 400 // ms for long press to split stack
+
+  // Split a stack in half (for long press)
+  const splitStack = (item) => {
+    if (!item || item.type == null || item.count <= 1) return null
+    const half = Math.ceil(item.count / 2)
+    return {
+      type: item.type,
+      count: half,
+      remaining: item.count - half
+    }
+  }
+
+  // Handle inventory slot mouse down (start long press)
+  const handleInventorySlotMouseDown = (index, e) => {
+    // Only left mouse button
+    if (e.button !== 0) return
+    // Don't start long press if slot is empty or only 1 item
+    if (inventory[index].type == null || inventory[index].count <= 1) return
+
+    setIsLongPress(false)
+    const timer = setTimeout(() => {
+      setIsLongPress(true)
+      // Long press: pick up half the stack
+      const split = splitStack(inventory[index])
+      if (split) {
+        const newInventory = [...inventory]
+        newInventory[index] = { type: split.type, count: split.remaining }
+        if (split.remaining <= 0) {
+          newInventory[index] = { type: null, count: 0 }
+        }
+        setInventory(newInventory)
+        if (game) {
+          game.inventory = newInventory
+          game.updateHotbarUI()
+        }
+        setSelectedSlot({ type: 'inventory_half', item: { type: split.type, count: split.count }, fromIndex: index })
+      }
+    }, longPressDelay)
+    setLongPressTimer(timer)
+  }
+
+  // Handle inventory slot mouse up (end long press)
+  const handleInventorySlotMouseUp = (index, e) => {
+    if (longPressTimer) {
+      clearTimeout(longPressTimer)
+      setLongPressTimer(null)
+    }
+    // If it was a long press, don't trigger click
+    if (isLongPress) {
+      setIsLongPress(false)
+      // Place the half stack in the target slot
+      if (selectedSlot?.type === 'inventory_half') {
+        const halfItem = selectedSlot.item
+        const newInventory = [...inventory]
+
+        if (newInventory[index].type == null) {
+          // Empty slot - place the half stack
+          newInventory[index] = { ...halfItem }
+        } else if (newInventory[index].type === halfItem.type) {
+          // Same type - add to stack
+          newInventory[index].count += halfItem.count
+        } else {
+          // Different type - swap with the half stack (put original back)
+          // Actually, let's just place the half stack back where it came from
+          // and do a normal swap
+          const temp = { ...newInventory[index] }
+          newInventory[index] = { ...halfItem }
+          if (selectedSlot.fromIndex != null) {
+            newInventory[selectedSlot.fromIndex] = temp
+          }
+        }
+
+        setInventory(newInventory)
+        if (game) {
+          game.inventory = newInventory
+          game.updateHotbarUI()
+        }
+        setSelectedSlot(null)
+      }
+      return
+    }
+    // Normal click
+    handleInventorySlotClick(index)
+  }
+
+  // Handle mouse leave (cancel long press)
+  const handleInventorySlotMouseLeave = () => {
+    if (longPressTimer) {
+      clearTimeout(longPressTimer)
+      setLongPressTimer(null)
+    }
+  }
 
   // Load inventory from game
   useEffect(() => {
@@ -297,7 +393,9 @@ function InventoryScreen({ game, onClose }) {
                   selectedSlot?.type === 'inventory' &&
                   selectedSlot.index === index + 9 ? 'selected' : ''
                 }`}
-                onClick={() => handleInventorySlotClick(index + 9)}
+                onMouseDown={(e) => handleInventorySlotMouseDown(index + 9, e)}
+                onMouseUp={(e) => handleInventorySlotMouseUp(index + 9, e)}
+                onMouseLeave={handleInventorySlotMouseLeave}
               >
                 {item.type != null && previews[item.type] && (
                   <img src={previews[item.type]} alt="" className="item-preview" />
@@ -321,7 +419,9 @@ function InventoryScreen({ game, onClose }) {
                   selectedSlot?.type === 'inventory' &&
                   selectedSlot.index === index ? 'selected' : ''
                 }`}
-                onClick={() => handleInventorySlotClick(index)}
+                onMouseDown={(e) => handleInventorySlotMouseDown(index, e)}
+                onMouseUp={(e) => handleInventorySlotMouseUp(index, e)}
+                onMouseLeave={handleInventorySlotMouseLeave}
               >
                 {item.type != null && previews[item.type] && (
                   <img src={previews[item.type]} alt="" className="item-preview" />

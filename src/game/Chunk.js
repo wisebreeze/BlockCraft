@@ -114,13 +114,13 @@ export class Chunk {
     // Ore definitions: type, minY, maxY, threshold, frequency
     // Ordered from rarest to most common
     const oreDefs = [
-      { type: BlockTypes.EMERALD_ORE, minY: 1, maxY: 12, threshold: 0.97, freq: 0.15 },
-      { type: BlockTypes.DIAMOND_ORE, minY: 1, maxY: 8, threshold: 0.95, freq: 0.15 },
-      { type: BlockTypes.LAPIS_ORE, minY: 1, maxY: 12, threshold: 0.92, freq: 0.15 },
-      { type: BlockTypes.GOLD_ORE, minY: 1, maxY: 12, threshold: 0.9, freq: 0.15 },
-      { type: BlockTypes.REDSTONE_ORE, minY: 1, maxY: 8, threshold: 0.85, freq: 0.12 },
-      { type: BlockTypes.IRON_ORE, minY: 1, maxY: 20, threshold: 0.82, freq: 0.1 },
-      { type: BlockTypes.COAL_ORE, minY: 1, maxY: 28, threshold: 0.72, freq: 0.08 }
+      { type: BlockTypes.EMERALD_ORE, minY: 1, maxY: 12, threshold: 0.85, freq: 0.08 },
+      { type: BlockTypes.DIAMOND_ORE, minY: 1, maxY: 8, threshold: 0.8, freq: 0.08 },
+      { type: BlockTypes.LAPIS_ORE, minY: 1, maxY: 12, threshold: 0.78, freq: 0.08 },
+      { type: BlockTypes.GOLD_ORE, minY: 1, maxY: 12, threshold: 0.75, freq: 0.08 },
+      { type: BlockTypes.REDSTONE_ORE, minY: 1, maxY: 8, threshold: 0.7, freq: 0.06 },
+      { type: BlockTypes.IRON_ORE, minY: 1, maxY: 24, threshold: 0.65, freq: 0.05 },
+      { type: BlockTypes.COAL_ORE, minY: 1, maxY: 28, threshold: 0.55, freq: 0.04 }
     ]
 
     for (let x = 0; x < this.size; x++) {
@@ -144,7 +144,7 @@ export class Chunk {
           for (const ore of oreDefs) {
             if (y < ore.minY || y > ore.maxY) continue
 
-            const noiseVal = this.world.smoothNoise3D(
+            const noiseVal = this.world.noise3D(
               worldX * ore.freq,
               y * ore.freq,
               worldZ * ore.freq
