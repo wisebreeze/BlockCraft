@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import Hotbar from './components/Hotbar.jsx'
 import Joystick from './components/Joystick.jsx'
 import ActionButtons from './components/ActionButtons.jsx'
+import Crosshair from './components/Crosshair.jsx'
 
 function App({ game }) {
   const [inventory, setInventory] = useState(
@@ -119,6 +120,7 @@ function App({ game }) {
 
   return (
     <>
+      <Crosshair />
       <Hotbar
         inventory={inventory}
         selectedSlot={selectedSlot}
