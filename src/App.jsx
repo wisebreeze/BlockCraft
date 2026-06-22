@@ -3,23 +3,29 @@ import Hotbar from './components/Hotbar.jsx'
 import Joystick from './components/Joystick.jsx'
 import ActionButtons from './components/ActionButtons.jsx'
 import Crosshair from './components/Crosshair.jsx'
+import InventoryScreen from './components/InventoryScreen.jsx'
+import CraftingTableScreen from './components/CraftingTableScreen.jsx'
+import FurnaceScreen from './components/FurnaceScreen.jsx'
 
 function App({ game }) {
   const [inventory, setInventory] = useState(
-    Array(9).fill(null).map(() => ({ type: null, count: 0 }))
+    Array(36).fill(null).map(() => ({ type: null, count: 0 }))
   )
   const [selectedSlot, setSelectedSlot] = useState(0)
   const [isMobile, setIsMobile] = useState(false)
   const [isFlying, setIsFlying] = useState(false)
   const [sneakToggled, setSneakToggled] = useState(false)
 
+  // UI screen states
+  const [showInventory, setShowInventory] = useState(false)
+  const [showCraftingTable, setShowCraftingTable] = useState(false)
+  const [showFurnace, setShowFurnace] = useState(false)
+
   useEffect(() => {
-    // Check if mobile
     setIsMobile('ontouchstart' in window || navigator.maxTouchPoints > 0)
 
     if (!game) return
 
-    // Set up callbacks
     game.onInventoryChange = (inv) => {
       setInventory(inv.map(item => ({ ...item })))
     }
@@ -35,13 +41,27 @@ function App({ game }) {
       }
     }
 
+    // Callback for opening interactive block UIs
+    game.onOpenInteractive = (blockType) => {
+      // Close all first
+      setShowInventory(false)
+      setShowCraftingTable(false)
+      setShowFurnace(false)
+
+      // Open appropriate UI
+      if (blockType === 'crafting_table') {
+        setShowCraftingTable(true)
+      } else if (blockType === 'furnace') {
+        setShowFurnace(true)
+      }
+    }
+
     // Initial state
     setInventory(game.inventory.map(item => ({ ...item })))
     setSelectedSlot(game.selectedSlot ?? game.selectedBlockIndex ?? 0)
     setIsFlying(game.player?.flying || false)
   }, [game])
 
-  // Poll sneak toggled state
   useEffect(() => {
     if (!game) return
     const interval = setInterval(() => {
@@ -51,6 +71,24 @@ function App({ game }) {
     }, 100)
     return () => clearInterval(interval)
   }, [game])
+
+  // Close all screens
+  const closeAllScreens = () => {
+    setShowInventory(false)
+    setShowCraftingTable(false)
+    setShowFurnace(false)
+    // Release pointer lock if needed
+    if (game && document.pointerLockElement) {
+      document.exitPointerLock()
+    }
+  }
+
+  const handleOpenInventory = () => {
+    setShowInventory(true)
+    if (game && document.pointerLockElement) {
+      document.exitPointerLock()
+    }
+  }
 
   const handleSlotSelect = (index) => {
     if (game) {
@@ -118,17 +156,24 @@ function App({ game }) {
     }
   }
 
+  // Only show hotbar and crosshair when no UI is open
+  const anyUIShown = showInventory || showCraftingTable || showFurnace
+
   return (
     <>
-      <Crosshair />
-      <Hotbar
-        inventory={inventory}
-        selectedSlot={selectedSlot}
-        onSlotSelect={handleSlotSelect}
-        game={game}
-      />
+      {!anyUIShown && <Crosshair />}
 
-      {isMobile && (
+      {!anyUIShown && (
+        <Hotbar
+          inventory={inventory.slice(0, 9)}
+          selectedSlot={selectedSlot}
+          onSlotSelect={handleSlotSelect}
+          game={game}
+          onOpenInventory={handleOpenInventory}
+        />
+      )}
+
+      {isMobile && !anyUIShown && (
         <>
           <Joystick
             onMove={handleJoystickMove}
@@ -145,6 +190,21 @@ function App({ game }) {
             sneakToggled={sneakToggled}
           />
         </>
+      )}
+
+      {/* Inventory Screen */}
+      {showInventory && (
+        <InventoryScreen game={game} onClose={closeAllScreens} />
+      )}
+
+      {/* Crafting Table Screen */}
+      {showCraftingTable && (
+        <CraftingTableScreen game={game} onClose={closeAllScreens} />
+      )}
+
+      {/* Furnace Screen */}
+      {showFurnace && (
+        <FurnaceScreen game={game} onClose={closeAllScreens} />
       )}
     </>
   )

@@ -126,6 +126,320 @@ html, body {
   font-weight: bold;
 }
 
+/* More button in hotbar */
+.hotbar-more-btn {
+  position: relative;
+  width: 50px;
+  height: 50px;
+  background: rgba(139, 139, 139, 0.5);
+  border: 2px solid #555;
+  border-radius: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.1s ease;
+  font-size: 24px;
+  color: #fff;
+  text-shadow: 1px 1px 1px #000;
+}
+
+.hotbar-more-btn:hover {
+  border-color: #888;
+  background: rgba(160, 160, 160, 0.5);
+}
+
+/* Inventory overlay */
+.inventory-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+
+.inventory-screen {
+  background: #c6c6c6;
+  border: 3px solid #555;
+  border-radius: 4px;
+  padding: 20px;
+  min-width: 400px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+
+.inventory-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid #888;
+}
+
+.inventory-header h2 {
+  font-size: 18px;
+  color: #333;
+  text-shadow: 1px 1px 0 #fff;
+}
+
+.close-btn {
+  width: 28px;
+  height: 28px;
+  background: #888;
+  border: 2px solid #555;
+  border-radius: 2px;
+  color: #fff;
+  font-size: 18px;
+  font-weight: bold;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+.close-btn:hover {
+  background: #a00;
+}
+
+/* Inventory slots */
+.inventory-slot {
+  position: relative;
+  width: 40px;
+  height: 40px;
+  background: #8b8b8b;
+  border: 2px solid #555;
+  border-radius: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.1s ease;
+}
+
+.inventory-slot:hover {
+  border-color: #fff;
+}
+
+.inventory-slot.selected {
+  border-color: #fff;
+  background: #aaa;
+  box-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
+}
+
+.inventory-slot img {
+  width: 30px;
+  height: 30px;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+
+.item-preview {
+  width: 30px;
+  height: 30px;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+
+/* Crafting section */
+.crafting-section {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  margin-bottom: 20px;
+  padding: 15px;
+  background: #a0a0a0;
+  border: 2px solid #777;
+  border-radius: 4px;
+}
+
+.crafting-grid-2x2 {
+  display: grid;
+  grid-template-columns: repeat(2, 40px);
+  grid-template-rows: repeat(2, 40px);
+  gap: 2px;
+}
+
+.crafting-grid-3x3 {
+  display: grid;
+  grid-template-columns: repeat(3, 40px);
+  grid-template-rows: repeat(3, 40px);
+  gap: 2px;
+}
+
+.crafting-arrow {
+  font-size: 24px;
+  color: #555;
+  font-weight: bold;
+}
+
+.result-slot {
+  width: 50px;
+  height: 50px;
+  background: #7b7b7b;
+}
+
+.result-slot.has-result {
+  background: #9b9b9b;
+}
+
+.result-slot img {
+  width: 38px;
+  height: 38px;
+}
+
+/* Inventory grids */
+.main-inventory-section,
+.hotbar-section {
+  margin-bottom: 15px;
+}
+
+.main-inventory-section h3,
+.hotbar-section h3 {
+  font-size: 14px;
+  color: #333;
+  margin-bottom: 8px;
+  text-shadow: 1px 1px 0 #ddd;
+}
+
+.inventory-grid-3x9 {
+  display: grid;
+  grid-template-columns: repeat(9, 40px);
+  grid-template-rows: repeat(3, 40px);
+  gap: 2px;
+  padding: 4px;
+  background: #a0a0a0;
+  border: 2px solid #777;
+  border-radius: 4px;
+}
+
+.inventory-grid-1x9 {
+  display: grid;
+  grid-template-columns: repeat(9, 40px);
+  gap: 2px;
+  padding: 4px;
+  background: #a0a0a0;
+  border: 2px solid #777;
+  border-radius: 4px;
+}
+
+/* Furnace UI */
+.furnace-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 20px;
+  padding: 15px;
+  background: #a0a0a0;
+  border: 2px solid #777;
+  border-radius: 4px;
+}
+
+.furnace-layout {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.furnace-input-slot,
+.furnace-output-slot {
+  width: 45px;
+  height: 45px;
+}
+
+.furnace-output-slot img {
+  width: 34px;
+  height: 34px;
+}
+
+.furnace-progress {
+  position: relative;
+  width: 40px;
+  height: 20px;
+  background: #555;
+  border: 2px solid #333;
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.furnace-progress-fill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  background: #fff;
+  transition: width 0.1s linear;
+}
+
+.furnace-arrow {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 14px;
+  color: #333;
+  font-weight: bold;
+  z-index: 1;
+}
+
+.furnace-fuel-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.furnace-fuel-slot {
+  width: 40px;
+  height: 40px;
+}
+
+.furnace-fuel-bar {
+  width: 20px;
+  height: 40px;
+  background: #555;
+  border: 2px solid #333;
+  border-radius: 2px;
+  overflow: hidden;
+  position: relative;
+}
+
+.furnace-fuel-fill {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  background: #ff8;
+  transition: height 0.1s linear;
+}
+
+/* Slot number in inventory */
+.inventory-slot .slot-number {
+  position: absolute;
+  top: 2px;
+  left: 4px;
+  font-size: 9px;
+  color: #fff;
+  text-shadow: 1px 1px 1px #000;
+  font-weight: bold;
+}
+
+.inventory-slot .slot-count {
+  position: absolute;
+  bottom: 2px;
+  right: 4px;
+  font-size: 10px;
+  color: #fff;
+  text-shadow: 1px 1px 1px #000;
+  font-weight: bold;
+}
+
 /* Mobile Controls */
 #mobile-controls {
   display: none;

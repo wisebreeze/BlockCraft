@@ -1,7 +1,12 @@
 import * as THREE from 'three'
 import { World } from './World.js'
 import { Player } from './Player.js'
-import { HotbarBlocks, BlockTypes, BlockData, getBlockDisplayColor, getBlockDisplayImageURL } from './BlockTypes.js'
+import {
+  HotbarBlocks, BlockTypes, BlockData,
+  ItemTypes, isBlockItem, getItemBlockType,
+  getBlockDisplayColor, getBlockDisplayImageURL,
+  getItemDisplayImageURL, getMaxStackSize
+} from './BlockTypes.js'
 
 export class Game {
   constructor(canvas) {
@@ -10,11 +15,34 @@ export class Game {
     this.selectedBlockIndex = 0
     this.lastFlyUpTapTime = 0
 
-    // Inventory system - 9 slots for hotbar
-    this.inventory = new Array(9).fill(null).map(() => ({ type: null, count: 0 }))
+    // Inventory system
+    // Slots 0-8: hotbar (9 slots)
+    // Slots 9-35: main inventory (27 slots, 3 rows × 9 columns)
+    this.inventory = new Array(36).fill(null).map(() => ({ type: null, count: 0 }))
+
+    // Block drop mapping (what item you get when you break a block)
+    this.blockDrops = {
+      [BlockTypes.STONE]: { type: BlockTypes.COBBLESTONE, count: 1 },
+      [BlockTypes.COAL_ORE]: { type: ItemTypes.COAL, count: 1 },
+      [BlockTypes.DIAMOND_ORE]: { type: ItemTypes.DIAMOND, count: 1 },
+      [BlockTypes.EMERALD_ORE]: { type: ItemTypes.EMERALD, count: 1 },
+      [BlockTypes.LAPIS_ORE]: { type: ItemTypes.LAPIS_LAZULI, count: 4 },
+      [BlockTypes.REDSTONE_ORE]: { type: ItemTypes.REDSTONE, count: 4 },
+      // Iron and gold ore drop themselves (need smelting)
+      [BlockTypes.IRON_ORE]: { type: BlockTypes.IRON_ORE, count: 1 },
+      [BlockTypes.GOLD_ORE]: { type: BlockTypes.GOLD_ORE, count: 1 }
+      // All other blocks drop themselves
+    }
 
     this.init()
     this.setupInput()
+
+    // Give some initial items for testing
+    this.addToInventory(BlockTypes.WOOD, 10)
+    this.addToInventory(BlockTypes.COBBLESTONE, 20)
+    this.addToInventory(ItemTypes.COAL, 5)
+    this.addToInventory(BlockTypes.IRON_ORE, 5)
+
     // Auto-start game (UI handled by React)
     this.start()
   }
@@ -127,7 +155,10 @@ export class Game {
       if (e.button === 0) {
         this.breakBlock()
       } else if (e.button === 2) {
-        this.placeBlock()
+        // Try to interact first, then place block
+        if (!this.tryInteract()) {
+          this.placeBlock()
+        }
       }
     })
 
@@ -272,28 +303,39 @@ export class Game {
     return null
   }
 
-  addToInventory(blockType) {
+  addToInventory(itemType, count = 1) {
+    const maxStack = getMaxStackSize(itemType)
+
     // First try to stack with existing slot of same type
     for (let i = 0; i < this.inventory.length; i++) {
-      if (this.inventory[i].type === blockType) {
-        this.inventory[i].count++
-        this.updateHotbarUI()
-        return true
+      if (this.inventory[i].type === itemType && this.inventory[i].count < maxStack) {
+        const canAdd = Math.min(count, maxStack - this.inventory[i].count)
+        this.inventory[i].count += canAdd
+        count -= canAdd
+        if (count <= 0) {
+          this.updateHotbarUI()
+          return true
+        }
       }
     }
 
     // Then try to find empty slot
     for (let i = 0; i < this.inventory.length; i++) {
       if (this.inventory[i].type === null || this.inventory[i].count === 0) {
-        this.inventory[i].type = blockType
-        this.inventory[i].count = 1
-        this.updateHotbarUI()
-        return true
+        const canAdd = Math.min(count, maxStack)
+        this.inventory[i].type = itemType
+        this.inventory[i].count = canAdd
+        count -= canAdd
+        if (count <= 0) {
+          this.updateHotbarUI()
+          return true
+        }
       }
     }
 
-    // Inventory full
-    return false
+    // Inventory full (partial add)
+    this.updateHotbarUI()
+    return count <= 0
   }
 
   removeFromInventory(slotIndex) {
@@ -410,15 +452,47 @@ export class Game {
 
       if (blockType !== BlockTypes.AIR) {
         this.world.setBlock(result.x, result.y, result.z, BlockTypes.AIR)
-        // Add to inventory
-        this.addToInventory(blockType)
+
+        // Get drop item from mapping, or drop block itself if not mapped
+        const drop = this.blockDrops[blockType] || { type: blockType, count: 1 }
+        this.addToInventory(drop.type, drop.count)
       }
     }
+  }
+
+  tryInteract() {
+    const direction = this.player.getLookDirection()
+    const origin = new THREE.Vector3(
+      this.player.position.x,
+      this.player.position.y + this.player.eyeHeight,
+      this.player.position.z
+    )
+
+    const result = this.world.raycast(origin, direction, 6)
+    if (!result.hit) return false
+
+    const blockType = this.world.getBlock(result.x, result.y, result.z)
+
+    // Check if it's an interactive block
+    if (blockType === BlockTypes.CRAFTING_TABLE) {
+      this.onOpenInteractive?.('crafting_table')
+      return true
+    } else if (blockType === BlockTypes.FURNACE) {
+      this.onOpenInteractive?.('furnace')
+      return true
+    }
+
+    return false
   }
 
   placeBlock() {
     const selectedType = this.getSelectedBlockType()
     if (selectedType === null) return
+
+    // Only block items can be placed
+    if (!isBlockItem(selectedType)) return
+
+    const blockType = getItemBlockType(selectedType)
 
     const direction = this.player.getLookDirection()
     const origin = new THREE.Vector3(
@@ -432,9 +506,6 @@ export class Game {
       const placeX = result.x + result.normal.x
       const placeY = result.y + result.normal.y
       const placeZ = result.z + result.normal.z
-
-      // Check if player is not in the way
-      const blockType = selectedType
 
       // Don't place if it would collide with player
       const playerMin = {

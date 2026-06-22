@@ -321,6 +321,29 @@ export class World {
     return n - Math.floor(n)
   }
 
+  // Simple 3D noise function for ore generation
+  noise3D(x, y, z) {
+    const seed = 54321
+    const n = Math.sin(x * 12.9898 + y * 78.233 + z * 37.719 + seed) * 43758.5453
+    return n - Math.floor(n)
+  }
+
+  // Smooth 3D noise
+  smoothNoise3D(x, y, z) {
+    // Sample neighbors and average for smoothness
+    let sum = 0
+    let count = 0
+    for (let dx = -1; dx <= 1; dx++) {
+      for (let dy = -1; dy <= 1; dy++) {
+        for (let dz = -1; dz <= 1; dz++) {
+          sum += this.noise3D(x + dx, y + dy, z + dz)
+          count++
+        }
+      }
+    }
+    return sum / count
+  }
+
   smoothNoise(x, z) {
     const corners = (this.noise2D(x - 1, z - 1) + this.noise2D(x + 1, z - 1) +
                      this.noise2D(x - 1, z + 1) + this.noise2D(x + 1, z + 1)) / 16

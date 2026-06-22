@@ -8,10 +8,8 @@ export class Chunk {
     this.world = world
     this.size = 16
     this.height = world.height
-
     this.blocks = new Map() // key: "x,y,z" (local coordinates)
     this.meshes = new Map() // key: "x,y,z", value: THREE.Mesh
-
     this.generated = false
     this.built = false
   }
@@ -37,6 +35,7 @@ export class Chunk {
   // Set block at local coordinates
   setBlock(x, y, z, type) {
     if (y < 0 || y >= this.height) return
+
     if (x < 0 || x >= this.size || z < 0 || z >= this.size) {
       // Out of bounds, delegate to world
       const worldX = this.chunkX * this.size + x
@@ -61,6 +60,7 @@ export class Chunk {
       [0, 1, 0], [0, -1, 0],
       [0, 0, 1], [0, 0, -1]
     ]
+
     for (const [dx, dy, dz] of directions) {
       const neighbor = this.getBlock(x + dx, y + dy, z + dz)
       if (neighbor === BlockTypes.AIR || BlockData[neighbor]?.transparent) {
@@ -103,7 +103,61 @@ export class Chunk {
       }
     }
 
+    // Generate ore veins
+    this.generateOres()
+
     this.generated = true
+  }
+
+  // Generate ore veins in stone
+  generateOres() {
+    // Ore definitions: type, minY, maxY, threshold, frequency
+    // Ordered from rarest to most common
+    const oreDefs = [
+      { type: BlockTypes.EMERALD_ORE, minY: 1, maxY: 12, threshold: 0.97, freq: 0.15 },
+      { type: BlockTypes.DIAMOND_ORE, minY: 1, maxY: 8, threshold: 0.95, freq: 0.15 },
+      { type: BlockTypes.LAPIS_ORE, minY: 1, maxY: 12, threshold: 0.92, freq: 0.15 },
+      { type: BlockTypes.GOLD_ORE, minY: 1, maxY: 12, threshold: 0.9, freq: 0.15 },
+      { type: BlockTypes.REDSTONE_ORE, minY: 1, maxY: 8, threshold: 0.85, freq: 0.12 },
+      { type: BlockTypes.IRON_ORE, minY: 1, maxY: 20, threshold: 0.82, freq: 0.1 },
+      { type: BlockTypes.COAL_ORE, minY: 1, maxY: 28, threshold: 0.72, freq: 0.08 }
+    ]
+
+    for (let x = 0; x < this.size; x++) {
+      for (let z = 0; z < this.size; z++) {
+        const worldX = this.chunkX * this.size + x
+        const worldZ = this.chunkZ * this.size + z
+        const height = this.world.getHeight(worldX, worldZ)
+
+        // Only replace stone blocks (below dirt layer)
+        const stoneMaxY = height - 4
+        if (stoneMaxY <= 1) continue
+
+        for (let y = 1; y < stoneMaxY; y++) {
+          const key = this.getKey(x, y, z)
+          const currentBlock = this.blocks.get(key)
+
+          // Only replace stone
+          if (currentBlock !== BlockTypes.STONE) continue
+
+          // Check each ore type
+          for (const ore of oreDefs) {
+            if (y < ore.minY || y > ore.maxY) continue
+
+            const noiseVal = this.world.smoothNoise3D(
+              worldX * ore.freq,
+              y * ore.freq,
+              worldZ * ore.freq
+            )
+
+            if (noiseVal > ore.threshold) {
+              this.blocks.set(key, ore.type)
+              break // Only one ore type per block
+            }
+          }
+        }
+      }
+    }
   }
 
   // Build all block meshes with face culling
@@ -130,7 +184,6 @@ export class Chunk {
       const worldZ = this.chunkZ * this.size + z
       mesh.position.set(worldX + 0.5, y + 0.5, worldZ + 0.5)
       mesh.userData = { x: worldX, y, z: worldZ, type: blockType, chunk: this }
-
       this.world.scene.add(mesh)
       this.meshes.set(key, mesh)
     }

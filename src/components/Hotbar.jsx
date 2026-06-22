@@ -1,12 +1,10 @@
 import { useState, useEffect } from 'react'
 
-function Hotbar({ inventory, selectedSlot, onSlotSelect, game }) {
+function Hotbar({ inventory, selectedSlot, onSlotSelect, game, onOpenInventory }) {
   const [previews, setPreviews] = useState({})
 
   useEffect(() => {
     if (!game) return
-
-    // Load block previews
     const loadPreviews = async () => {
       const newPreviews = {}
       for (let i = 0; i < inventory.length; i++) {
@@ -22,7 +20,6 @@ function Hotbar({ inventory, selectedSlot, onSlotSelect, game }) {
       }
       setPreviews(newPreviews)
     }
-
     loadPreviews()
   }, [inventory, game])
 
@@ -43,6 +40,9 @@ function Hotbar({ inventory, selectedSlot, onSlotSelect, game }) {
           )}
         </div>
       ))}
+      <div className="hotbar-more-btn" onClick={onOpenInventory}>
+        <span>⋯</span>
+      </div>
     </div>
   )
 }
