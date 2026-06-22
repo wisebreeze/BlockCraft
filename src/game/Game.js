@@ -15,7 +15,8 @@ export class Game {
 
     this.init()
     this.setupInput()
-    this.setupUI()
+    // Auto-start game (UI handled by React)
+    this.start()
   }
 
   init() {
@@ -469,16 +470,8 @@ export class Game {
 
   selectBlock(index) {
     this.selectedBlockIndex = index
-
-    // Update UI
-    const slots = document.querySelectorAll('.hotbar-slot')
-    slots.forEach((slot, i) => {
-      if (i === index) {
-        slot.classList.add('selected')
-      } else {
-        slot.classList.remove('selected')
-      }
-    })
+    // Notify React UI
+    this.onSlotChange?.(index)
   }
 
   getSelectedBlockType() {
@@ -603,68 +596,8 @@ export class Game {
   }
 
   updateHotbarUI() {
-    const slots = document.querySelectorAll('.hotbar-slot')
-    slots.forEach((slot, index) => {
-      const item = this.inventory[index]
-      const img = slot.querySelector('img')
-      const countEl = slot.querySelector('.slot-count')
-
-      if (item.type !== null && item.count > 0) {
-        // Get block data
-        const displayColor = getBlockDisplayColor(item.type)
-
-        // Set background color as fallback
-        slot.style.backgroundColor = displayColor + '33'
-
-        // Use 3D isometric preview of the block
-        this.getBlock3DPreviewURL(item.type).then(url => {
-          if (url) {
-            img.src = url
-            img.style.display = 'block'
-            img.style.width = '44px'
-            img.style.height = '44px'
-            slot.style.backgroundColor = ''
-          } else {
-            // Fallback to 2D processed image
-            getBlockDisplayImageURL(item.type).then(url2 => {
-              if (url2) {
-                img.src = url2
-                img.style.display = 'block'
-                img.style.width = '36px'
-                img.style.height = '36px'
-                slot.style.backgroundColor = ''
-              } else {
-                // Fallback to color block
-                img.style.display = 'none'
-                slot.style.backgroundColor = displayColor
-              }
-            })
-          }
-        })
-
-        // Show count if more than 1
-        if (item.count > 1) {
-          if (!countEl) {
-            const newCountEl = document.createElement('span')
-            newCountEl.className = 'slot-count'
-            newCountEl.textContent = item.count
-            slot.appendChild(newCountEl)
-          } else {
-            countEl.textContent = item.count
-            countEl.style.display = 'block'
-          }
-        } else if (countEl) {
-          countEl.style.display = 'none'
-        }
-      } else {
-        // Empty slot
-        img.style.display = 'none'
-        slot.style.backgroundColor = ''
-        if (countEl) {
-          countEl.style.display = 'none'
-        }
-      }
-    })
+    // Notify React UI of inventory change
+    this.onInventoryChange?.(this.inventory)
   }
 
   breakBlock() {
