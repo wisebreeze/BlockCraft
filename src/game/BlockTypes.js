@@ -152,7 +152,7 @@ export const BlockData = {
     name: 'Oak Leaves',
     solid: true,
     transparent: true,
-    opacity: 0.85,
+    alphaTest: 0.5,
     textures: {
       top: loadTexture('/assets/blocks/leaves_oak_carried.tga'),
       bottom: loadTexture('/assets/blocks/leaves_oak_carried.tga'),
@@ -389,11 +389,16 @@ export function getBlockMaterial(blockType, face) {
   const texture = data.textures[face] || data.textures.side
   const color = data.colors ? (data.colors[face] || data.colors.side || 0xffffff) : 0xffffff
 
+  // Use alphaTest (cutout) for blocks like leaves: pixels are either fully
+  // opaque or discarded, avoiding the washed-out look of alpha blending.
+  const useAlphaTest = data.alphaTest !== undefined && data.alphaTest > 0
+
   const material = new THREE.MeshLambertMaterial({
     map: texture,
     color: color,
-    transparent: data.transparent || false,
+    transparent: useAlphaTest ? false : (data.transparent || false),
     opacity: data.opacity || 1.0,
+    alphaTest: data.alphaTest || 0,
     side: THREE.FrontSide
   })
   return material

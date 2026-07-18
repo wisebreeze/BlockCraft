@@ -1,6 +1,7 @@
 import * as THREE from 'three'
 import { World } from './World.js'
 import { Player } from './Player.js'
+import { ParticleSystem } from './Particles.js'
 import {
   HotbarBlocks, BlockTypes, BlockData,
   ItemTypes, isBlockItem, getItemBlockType,
@@ -77,6 +78,9 @@ export class Game {
 
     // World
     this.world = new World(this.scene, 32)
+
+    // Particle system for block-break effects
+    this.particles = new ParticleSystem(this.scene)
 
     // Player
     this.player = new Player(this.camera, this.world)
@@ -444,6 +448,9 @@ export class Game {
       }
 
       if (blockType !== BlockTypes.AIR) {
+        // Spawn break particles before removing the block.
+        this.particles.spawnBlockBreak(result.x, result.y, result.z, blockType)
+
         this.world.setBlock(result.x, result.y, result.z, BlockTypes.AIR)
 
         // Get drop item from mapping, or drop block itself if not mapped
@@ -576,6 +583,9 @@ export class Game {
       this.player.position.z
     )
     this.world.processQueues()
+
+    // Update block-break particles
+    this.particles.update(deltaTime)
 
     this.renderer.render(this.scene, this.camera)
   }
