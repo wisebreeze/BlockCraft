@@ -569,11 +569,13 @@ export class Game {
     this.player.update(deltaTime)
     this.updateBlockHighlight()
 
-    // Update chunks every frame for infinite world
+    // Update chunk loading - updateChunks only does work when player crosses
+    // a chunk boundary; processQueues runs every frame for smooth staggered loading
     this.world.updateChunks(
       this.player.position.x,
       this.player.position.z
     )
+    this.world.processQueues()
 
     this.renderer.render(this.scene, this.camera)
   }

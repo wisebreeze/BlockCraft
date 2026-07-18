@@ -13,7 +13,12 @@ export class World {
     // Chunk loading queues for staggered loading (prevents frame drops)
     this._loadQueue = [] // Chunks waiting to be generated
     this._buildQueue = [] // Chunks waiting to have meshes built
+    this._dirtyChunks = new Set() // Chunks needing rebuild (from block edits)
     this._chunksPerFrame = 2 // Number of chunks to process per frame
+
+    // Track last player chunk to avoid redundant updates
+    this._lastPlayerChunkX = null
+    this._lastPlayerChunkZ = null
 
     this.geometry = new THREE.BoxGeometry(1, 1, 1)
 
@@ -74,6 +79,8 @@ export class World {
     const localX = x - chunkX * this.chunkSize
     const localZ = z - chunkZ * this.chunkSize
     chunk.setBlock(localX, y, localZ, type)
+    chunk.built = false
+    this._dirtyChunks.add(chunk)
 
     // If on chunk edge, mark neighboring chunks as dirty
     if (localX === 0 || localX === this.chunkSize - 1 ||
@@ -92,6 +99,7 @@ export class World {
       const neighbor = this.getChunk(chunkX + dx, chunkZ + dz)
       if (neighbor) {
         neighbor.built = false
+        this._dirtyChunks.add(neighbor)
       }
     }
   }
@@ -112,9 +120,17 @@ export class World {
   }
 
   // Update loaded chunks based on player position
+  // Only call this when the player crosses a chunk boundary to avoid per-frame overhead
   updateChunks(playerX, playerZ) {
     const playerChunkX = Math.floor(playerX / this.chunkSize)
     const playerChunkZ = Math.floor(playerZ / this.chunkSize)
+
+    // Skip if player hasn't moved to a new chunk since last update
+    if (this._lastPlayerChunkX === playerChunkX && this._lastPlayerChunkZ === playerChunkZ) {
+      return
+    }
+    this._lastPlayerChunkX = playerChunkX
+    this._lastPlayerChunkZ = playerChunkZ
 
     const viewDist = this.viewDistance
 
@@ -149,6 +165,7 @@ export class World {
     // Unload unneeded chunks (immediate, unloading is fast)
     for (const [key, chunk] of this.chunks) {
       if (!neededChunks.has(key)) {
+        this._dirtyChunks.delete(chunk)
         this.unloadChunk(chunk.chunkX, chunk.chunkZ)
       }
     }
@@ -162,24 +179,10 @@ export class World {
       const key = this.getChunkKey(item.cx, item.cz)
       return neededChunks.has(key)
     })
-
-    // Process chunk queues (staggered loading to prevent frame drops)
-    this._processChunkQueues()
   }
 
-  // Check if a chunk is already in any queue
-  _isInQueue(chunkX, chunkZ) {
-    for (const item of this._loadQueue) {
-      if (item.cx === chunkX && item.cz === chunkZ) return true
-    }
-    for (const item of this._buildQueue) {
-      if (item.cx === chunkX && item.cz === chunkZ) return true
-    }
-    return false
-  }
-
-  // Process chunk loading queues
-  _processChunkQueues() {
+  // Process chunk loading queues - call this every frame for smooth staggered loading
+  processQueues() {
     let buildsProcessed = 0
     let loadsProcessed = 0
     const maxPerFrame = this._chunksPerFrame
@@ -190,6 +193,7 @@ export class World {
       const chunk = this.getChunk(item.cx, item.cz)
       if (chunk && !chunk.built) {
         chunk.buildMeshes()
+        this._dirtyChunks.delete(chunk)
         buildsProcessed++
       }
     }
@@ -201,16 +205,32 @@ export class World {
       loadsProcessed++
     }
 
-    // Also rebuild any dirty chunks (from block edits)
-    if (buildsProcessed < maxPerFrame) {
-      for (const [key, chunk] of this.chunks) {
-        if (!chunk.built && !this._isInQueue(chunk.chunkX, chunk.chunkZ)) {
-          chunk.buildMeshes()
-          buildsProcessed++
-          if (buildsProcessed >= maxPerFrame) break
+    // Also rebuild any dirty chunks (from block edits) using the dirty set
+    if (buildsProcessed < maxPerFrame && this._dirtyChunks.size > 0) {
+      const toRebuild = []
+      for (const chunk of this._dirtyChunks) {
+        if (!chunk.built) {
+          toRebuild.push(chunk)
         }
       }
+      for (const chunk of toRebuild) {
+        if (buildsProcessed >= maxPerFrame) break
+        chunk.buildMeshes()
+        this._dirtyChunks.delete(chunk)
+        buildsProcessed++
+      }
     }
+  }
+
+  // Check if a chunk is already in any queue
+  _isInQueue(chunkX, chunkZ) {
+    for (const item of this._loadQueue) {
+      if (item.cx === chunkX && item.cz === chunkZ) return true
+    }
+    for (const item of this._buildQueue) {
+      if (item.cx === chunkX && item.cz === chunkZ) return true
+    }
+    return false
   }
 
   // Actually load and generate a chunk

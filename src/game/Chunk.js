@@ -112,15 +112,17 @@ export class Chunk {
   // Generate ore veins in stone
   generateOres() {
     // Ore definitions: type, minY, maxY, threshold, frequency
-    // Ordered from rarest to most common
+    // Ordered from rarest to most common.
+    // Thresholds are kept high so stone remains the dominant block and ores
+    // appear as small, rare veins rather than dominating the underground.
     const oreDefs = [
-      { type: BlockTypes.EMERALD_ORE, minY: 1, maxY: 12, threshold: 0.85, freq: 0.08 },
-      { type: BlockTypes.DIAMOND_ORE, minY: 1, maxY: 8, threshold: 0.8, freq: 0.08 },
-      { type: BlockTypes.LAPIS_ORE, minY: 1, maxY: 12, threshold: 0.78, freq: 0.08 },
-      { type: BlockTypes.GOLD_ORE, minY: 1, maxY: 12, threshold: 0.75, freq: 0.08 },
-      { type: BlockTypes.REDSTONE_ORE, minY: 1, maxY: 8, threshold: 0.7, freq: 0.06 },
-      { type: BlockTypes.IRON_ORE, minY: 1, maxY: 24, threshold: 0.65, freq: 0.05 },
-      { type: BlockTypes.COAL_ORE, minY: 1, maxY: 28, threshold: 0.55, freq: 0.04 }
+      { type: BlockTypes.EMERALD_ORE, minY: 1, maxY: 12, threshold: 0.998, freq: 0.12 },
+      { type: BlockTypes.DIAMOND_ORE, minY: 1, maxY: 8, threshold: 0.996, freq: 0.12 },
+      { type: BlockTypes.LAPIS_ORE, minY: 1, maxY: 12, threshold: 0.994, freq: 0.12 },
+      { type: BlockTypes.GOLD_ORE, minY: 1, maxY: 12, threshold: 0.992, freq: 0.12 },
+      { type: BlockTypes.REDSTONE_ORE, minY: 1, maxY: 8, threshold: 0.99, freq: 0.1 },
+      { type: BlockTypes.IRON_ORE, minY: 1, maxY: 24, threshold: 0.98, freq: 0.07 },
+      { type: BlockTypes.COAL_ORE, minY: 1, maxY: 28, threshold: 0.96, freq: 0.06 }
     ]
 
     for (let x = 0; x < this.size; x++) {
