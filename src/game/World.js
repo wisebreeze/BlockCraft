@@ -14,7 +14,12 @@ export class World {
     this._loadQueue = [] // Chunks waiting to be generated
     this._buildQueue = [] // Chunks waiting to have meshes built
     this._dirtyChunks = new Set() // Chunks needing rebuild (from block edits)
-    this._chunksPerFrame = 2 // Number of chunks to process per frame
+
+    // Time-budget for chunk work per frame. Instead of a fixed chunk count,
+    // we process work until the time budget is exhausted. This keeps frame
+    // times stable regardless of chunk complexity (a chunk full of ores
+    // takes longer than a flat one). ~8ms leaves headroom for rendering.
+    this._frameBudgetMs = 8
 
     // Track last player chunk to avoid redundant updates
     this._lastPlayerChunkX = null
@@ -181,44 +186,52 @@ export class World {
     })
   }
 
-  // Process chunk loading queues - call this every frame for smooth staggered loading
+  // Process chunk loading queues - call this every frame for smooth staggered loading.
+  //
+  // Generation and rendering are strictly separated: a chunk generated this
+  // frame is only rendered in a SUBSEQUENT frame. This is because generation
+  // (terrain + ores + trees) and mesh building are both heavy; doing both for
+  // the same chunk in one frame causes stutter.
+  //
+  // Work is bounded by a time budget rather than a fixed chunk count, so a
+  // complex chunk can't blow up frame time.
   processQueues() {
-    let buildsProcessed = 0
-    let loadsProcessed = 0
-    const maxPerFrame = this._chunksPerFrame
+    const startTime = performance.now()
+    const budget = this._frameBudgetMs
 
-    // First process build queue (faster, just mesh building)
-    while (buildsProcessed < maxPerFrame && this._buildQueue.length > 0) {
+    // Phase 1: Build meshes for already-generated chunks.
+    // These chunks have blocks but no meshes yet, so they're invisible until
+    // built. Prioritize this so players see chunks appear ASAP.
+    while (this._buildQueue.length > 0) {
+      if (performance.now() - startTime > budget) return
       const item = this._buildQueue.shift()
       const chunk = this.getChunk(item.cx, item.cz)
       if (chunk && !chunk.built) {
         chunk.buildMeshes()
         this._dirtyChunks.delete(chunk)
-        buildsProcessed++
       }
     }
 
-    // Then process load queue (slower, terrain generation)
-    while (loadsProcessed < maxPerFrame && this._loadQueue.length > 0) {
-      const item = this._loadQueue.shift()
-      this._doLoadChunk(item.cx, item.cz)
-      loadsProcessed++
-    }
-
-    // Also rebuild any dirty chunks (from block edits) using the dirty set
-    if (buildsProcessed < maxPerFrame && this._dirtyChunks.size > 0) {
+    // Phase 2: Rebuild dirty chunks (from block edits).
+    if (this._dirtyChunks.size > 0) {
       const toRebuild = []
       for (const chunk of this._dirtyChunks) {
-        if (!chunk.built) {
-          toRebuild.push(chunk)
-        }
+        if (!chunk.built) toRebuild.push(chunk)
       }
       for (const chunk of toRebuild) {
-        if (buildsProcessed >= maxPerFrame) break
+        if (performance.now() - startTime > budget) break
         chunk.buildMeshes()
         this._dirtyChunks.delete(chunk)
-        buildsProcessed++
       }
+    }
+
+    // Phase 3: Generate new chunks (terrain + ores + trees).
+    // This only runs after builds are done, so a chunk generated here is NOT
+    // built this frame - it goes to _buildQueue and is rendered next frame.
+    while (this._loadQueue.length > 0) {
+      if (performance.now() - startTime > budget) break
+      const item = this._loadQueue.shift()
+      this._doLoadChunk(item.cx, item.cz)
     }
   }
 
